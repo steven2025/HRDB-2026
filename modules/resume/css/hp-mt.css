@@ -1,0 +1,141 @@
+/* ==================================================================
+   岗位发现 / 投递管理 / 候选人发现 —— 首帧样式
+   必须在 <head> 里加载：JS 没跑之前就先隐藏需要折叠的行，避免闪烁
+   ================================================================== */
+
+/* 1a. 源码折叠（模板里带 hp-collapsed） */
+.mt-filters.hp-collapsed .mt-frow:not(.mt-fsearch){display:none}
+.mt-filters.hp-open .mt-frow:not(.mt-fsearch){display:flex}
+
+/* 1. 筛选：默认只留搜索行，其余先藏起来（JS 会移进 .hp-fwrap 再控制显示） */
+.mt-filters .mt-frow { display: none; }
+.mt-filters .mt-frow.mt-fsearch { display: flex; }
+
+.hp-fwrap { display: none; flex-direction: column; gap: 6px; margin-top: 8px; }
+.hp-fwrap .mt-frow { display: flex; }
+.hp-fwrap.on { display: flex; }
+
+.hp-fbar { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: 0 0 auto; }
+.mt-fsearch .hp-fbtn { margin-top: 0; }
+
+.hp-fbtn {
+  height: 28px; padding: 0 12px; align-self: flex-start;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface-2); color: var(--text-2);
+  font-size: 12px; cursor: pointer; margin-top: 8px;
+}
+.hp-fbtn:hover, .hp-fbtn.on { border-color: var(--primary); color: var(--primary); }
+
+/* 2. 视图菜单 */
+.hp-vwrap { position: relative; display: inline-flex; justify-content: flex-end; margin: 0 0 8px; }
+/* 工具条里的视图按钮：始终靠右（工具条换行时也不会挤到左边） */
+.hp-vwrap.mt-vmount { margin-left: auto; align-self: center; }
+.hp-vwrap.hp-inrow { margin: 0 0 0 auto; align-self: center; }
+.hp-vbtn2 {
+  height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-2); color: var(--text-2); font-size: 12.5px; cursor: pointer;
+}
+.hp-vbtn2:hover, .hp-vbtn2.on { border-color: var(--primary); color: var(--primary); }
+.hp-vmenu {
+  position: absolute; right: 0; top: 36px; z-index: 40; width: 182px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 6px; display: none; box-shadow: 0 18px 40px rgba(0,0,0,.5);
+}
+.hp-vmenu.on { display: block; }
+.hp-vmenu button {
+  display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 10px;
+  border: 0; border-radius: 7px; background: none; color: var(--text-2);
+  font-size: 12.5px; cursor: pointer; text-align: left;
+}
+.hp-vmenu button:hover { background: var(--surface-2); color: var(--text); }
+.hp-vmenu button.on { color: var(--primary); }
+.hp-vmenu .tick { margin-left: auto; font-size: 11px; }
+
+/* 3. 八种尺寸 */
+.mt-grid.hp-v-xl { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)) !important; }
+.mt-grid.hp-v-l  { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; }
+.mt-grid.hp-v-m  { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important; }
+.mt-grid.hp-v-s  { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important; }
+.mt-grid.hp-v-tiles { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; gap: 8px !important; }
+.mt-grid.hp-v-tiles .mt-card { display: flex; align-items: center; gap: 12px; min-height: 0 !important; padding: 10px 12px !important; }
+.mt-grid.hp-v-content { grid-template-columns: 1fr !important; gap: 2px !important; }
+.mt-grid.hp-v-content .mt-card { display: flex; align-items: baseline; gap: 12px; min-height: 0 !important; padding: 7px 10px !important; border-radius: 6px !important; }
+.mt-grid.hp-v-s .mt-card .mt-card-sub, .mt-grid.hp-v-s .mt-card p { font-size: 11px !important; }
+
+/* 4. 列表 / 详细信息 */
+.mt-grid.hp-list { grid-template-columns: 1fr !important; gap: 8px !important; }
+.mt-grid.hp-list .mt-card { display: flex; align-items: center; gap: 14px; padding: 10px 14px !important; min-height: 0 !important; }
+.mt-grid.hp-list .mt-card > * { margin: 0 !important; }
+.mt-grid.hp-list .mt-card img, .mt-grid.hp-list .mt-card .mt-ava { width: 36px !important; height: 36px !important; flex: 0 0 36px; }
+.mt-grid.hp-list .mt-card .mt-card-body { flex: 1; min-width: 0; }
+.mt-grid.hp-list .mt-card .mt-card-title { font-size: 13.5px !important; }
+
+/* 内容模式：无头像、单行、分隔线，和「列表」拉开差别 */
+.mt-grid.hp-v-content .mt-card { display: flex !important; align-items: center !important; gap: 10px !important;
+  padding: 6px 10px !important; border: 0 !important; border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important; background: transparent !important; min-height: 0 !important; }
+.mt-grid.hp-v-content .mt-card img,
+.mt-grid.hp-v-content .mt-card .mt-ava { display: none !important; }
+.mt-grid.hp-v-content .mt-card * { font-size: 12px !important; line-height: 1.5 !important; margin: 0 !important; }
+.mt-grid.hp-v-content .mt-card .mt-card-title { font-weight: 600 !important; }
+
+/* 固定的视图控件 */
+.hp-ctl{position:fixed;right:26px;bottom:88px;z-index:60}
+.hp-ctl-btn{height:34px;padding:0 14px;border:1px solid var(--border);border-radius:17px;
+  background:var(--surface);color:var(--text-2);font-size:12.5px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.hp-ctl-btn:hover{border-color:var(--primary);color:var(--primary)}
+.hp-ctl-menu{position:absolute;right:0;bottom:42px;width:160px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;padding:6px;display:none;
+  box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.hp-ctl-menu.on{display:block}
+.hp-ctl-menu button{display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 10px;
+  border:0;border-radius:7px;background:none;color:var(--text-2);font-size:12.5px;cursor:pointer;text-align:left}
+.hp-ctl-menu button:hover{background:var(--surface-2);color:var(--text)}
+.hp-ctl-menu button.on{color:var(--primary)}
+
+/* kill-flicker: 切视图时不做过场动画，避免一帧旧内容 */
+.view, .view.active, .mt-stage, .mt-stage-in, .mt-cards, .mt-grid {
+  animation: none !important;
+  transition: none !important;
+}
+.mt-card { animation: none !important; transition: none !important; }
+
+/* no-view-anim: 关掉切视图的淡入/上浮动画（0.34s 淡入会看成闪一下） */
+.workspace .view.active,
+.workspace > .subapp.active,
+.workspace .view,
+.mt-stage, .mt-stage-in {
+  animation: none !important;
+  transition: none !important;
+  opacity: 1 !important;
+}
+
+/* ================= 侧栏收起（源码按钮 + CSS，唯一一套） =================
+   目标布局：64px 窄栏 = 图标在上 + 两字简称在下，竖排、居中，不换行不溢出。
+   收起态隐藏：品牌文字 / 角色切换 / 分组标题 / 底部用户信息。
+   简称来自 app.html renderNav 写进 nav-item 的 data-short。 */
+
+/* 展开态：收起按钮固定在右上角，品牌文字保持原有换行宽度 */
+.hp-side-toggle{position:absolute;right:8px;top:8px;width:22px;height:22px;border-radius:6px;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--text-3);font-size:10px;cursor:pointer;z-index:4}
+.hp-side-toggle:hover{color:var(--primary);border-color:var(--primary)}
+
+/* 收起态 */
+body.hp-nav-collapsed .sidebar{width:64px !important;flex:0 0 64px !important;overflow:hidden}
+body.hp-nav-collapsed .sidebar .brand{padding:46px 0 10px;justify-content:center;gap:0}
+body.hp-nav-collapsed .sidebar .brand-logo{width:34px;height:34px;flex:0 0 34px;border-radius:10px}
+body.hp-nav-collapsed .sidebar .brand-text,
+body.hp-nav-collapsed .sidebar .role-switch,
+body.hp-nav-collapsed .sidebar .sidebar-foot,
+body.hp-nav-collapsed .sidebar .hp-nav-group,
+body.hp-nav-collapsed .sidebar .user-meta{display:none !important}
+body.hp-nav-collapsed #nav{padding:8px 6px;overflow-x:hidden;scrollbar-width:none}
+body.hp-nav-collapsed #nav::-webkit-scrollbar{width:0}
+body.hp-nav-collapsed .nav-item{flex-direction:column;justify-content:center;gap:3px;
+  height:48px;margin:3px 0;padding:0 2px;font-size:0;line-height:0;
+  white-space:nowrap;overflow:hidden;border-radius:10px}
+body.hp-nav-collapsed .nav-item > span{display:none !important}
+body.hp-nav-collapsed .nav-item .ico{width:18px;height:18px;flex:0 0 18px}
+body.hp-nav-collapsed .nav-item::after{content:attr(data-short);font-size:10.5px;line-height:1.1;
+  color:currentColor;letter-spacing:0;white-space:nowrap}

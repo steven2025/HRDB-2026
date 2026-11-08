@@ -1,0 +1,164 @@
+/* =========================================================
+   简历 / 岗位详情 · 纸张文档模板
+   加载顺序在 app.html 内联样式之后，用于替换原来的 .rz-* 卡片
+   ========================================================= */
+
+/* 顶部操作条 */
+.mt-doc-top{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:13px 20px;border-bottom:1px solid rgba(120,200,255,.14);
+  background:linear-gradient(180deg,rgba(10,20,36,.72),rgba(10,20,36,.35));
+}
+.mt-doc-eyebrow{font-family:"Cascadia Mono",Consolas,monospace;font-size:8px;letter-spacing:2px;color:#38bdf8;opacity:.9}
+.mt-doc-title{font-size:15px;font-weight:700;color:#e9f2ff;margin-top:2px}
+.mt-doc-title span{font-size:11px;font-weight:400;color:#8fa3bf;margin-left:6px}
+.mt-doc-top .mt-res-act{margin-left:auto}
+
+.docwrap{padding:16px 20px 26px;display:flex;justify-content:center}
+
+/* 纸张 */
+.paperdoc{
+  width:100%;max-width:1000px;background:#fbfcfe;color:#16233b;
+  border-radius:6px;padding:30px 34px 22px;
+  box-shadow:0 22px 60px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.5) inset;
+  font-family:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  overflow-wrap:anywhere;word-break:break-word;
+}
+.paperdoc *{box-sizing:border-box}
+
+/* 头部 */
+.pd-head{display:flex;gap:16px;align-items:flex-start;padding-bottom:14px;border-bottom:2px solid #1d4ed8}
+.pd-photo{width:78px;height:96px;border-radius:8px;object-fit:cover;border:1px solid #d8e1ee;flex:0 0 auto;background:#eef4fc}
+.pd-photo.ph{display:grid;place-items:center;font-size:30px;color:#1d4ed8;font-weight:700}
+.pd-id{flex:1;min-width:0}
+.pd-name{font-size:24px;line-height:1.2;letter-spacing:.5px;color:#0e1b30;font-weight:800}
+.pd-name span{font-size:11px;font-weight:400;color:#5a6a83;margin-left:8px;letter-spacing:0}
+.pd-role{font-size:12.5px;color:#1d4ed8;font-weight:600;margin-top:4px}
+.pd-contact{font-size:10.5px;color:#5a6a83;line-height:1.7;margin-top:3px}
+.pd-contact b{color:#22344f;font-weight:600}
+.pd-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.pd-chips span{font-size:8.8px;padding:2px 7px;border-radius:10px;background:#eef4fc;border:1px solid #dce8f6;color:#2b4a75;white-space:nowrap}
+.pd-chips span.good{background:#e8f8f1;border-color:#bfe8d7;color:#0b6b4f}
+.pd-chips span.warn{background:#fff5e5;border-color:#f6ddb8;color:#9a5b09}
+.pd-stamp{flex:0 0 auto;text-align:right;font-family:"Cascadia Mono",Consolas,monospace;font-size:8px;letter-spacing:1.4px;color:#8a99ad;line-height:1.8}
+.pd-stamp b{display:block;font-size:10px;color:#2b4a75;letter-spacing:.4px}
+
+/* 主体两栏 */
+.pd-body{display:grid;grid-template-columns:1.45fr .95fr;gap:24px;margin-top:16px}
+.pd-main,.pd-side{min-width:0}
+.pd-side{background:#f5f8fc;border:1px solid #e8eef7;border-radius:8px;padding:12px 13px}
+.pd-sec{margin-bottom:15px}
+.pd-sec:last-child{margin-bottom:0}
+.pd-sec h3{
+  font-size:9.5px;letter-spacing:1.5px;color:#1d4ed8;font-weight:700;
+  padding:0 0 5px 7px;border-left:3px solid #1d4ed8;border-bottom:1px solid #e5ebf4;
+  margin-bottom:7px;line-height:1.1;
+}
+.pd-side .pd-sec h3{font-size:9px;letter-spacing:1.1px}
+
+.pd-p{font-size:10.8px;line-height:1.65;color:#33445e;margin:0}
+.pd-muted{font-size:10px;color:#8a99ad;font-style:normal}
+.pd-kv{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dashed #e8eef7;font-size:10px;color:#6b7c94}
+.pd-kv:last-child{border-bottom:0}
+.pd-kv b{font-size:10px;color:#1f2f4a;font-weight:600;text-align:right;min-width:0}
+.pd-kv.wide{display:block}
+.pd-kv.wide b{display:block;text-align:left;margin-top:2px;font-weight:500;color:#33445e;line-height:1.55}
+
+/* 工作经历 */
+.pd-exp{position:relative;padding-left:11px;margin-bottom:12px;border-left:1px solid #dbe4f0}
+.pd-exp:last-child{margin-bottom:0}
+.pd-exp::before{content:"";position:absolute;left:-3.5px;top:5px;width:6px;height:6px;border-radius:50%;background:#1d4ed8;box-shadow:0 0 0 2px #fbfcfe}
+.pd-exp-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.pd-exp-h b{font-size:11.5px;color:#13203a;font-weight:700}
+.pd-exp-h span{font-family:"Cascadia Mono",Consolas,monospace;font-size:8.5px;color:#8a99ad;white-space:nowrap}
+.pd-exp-role{font-size:10px;color:#1d4ed8;margin:2px 0 4px;font-weight:600}
+.pd-ul{list-style:none;margin:3px 0 0;padding:0}
+.pd-ul li{position:relative;padding-left:9px;font-size:10.2px;line-height:1.6;color:#3b4c66;margin-bottom:2px}
+.pd-ul li::before{content:"";position:absolute;left:0;top:6px;width:3px;height:3px;border-radius:50%;background:#8fa3bf}
+.pd-ach{display:flex;flex-direction:column;gap:3px}
+.pd-ach div{position:relative;padding-left:14px;font-size:10.2px;line-height:1.55;color:#24503f}
+.pd-ach div::before{content:"✓";position:absolute;left:0;top:0;font-size:9px;color:#059669;font-weight:700}
+.pd-ach div b{color:#065f46}
+
+/* 技能 / 标签 */
+.pd-tags{display:flex;flex-wrap:wrap;gap:3px}
+.pd-tags span{font-size:8.8px;padding:2px 6px;border-radius:4px;background:#eef4fc;border:1px solid #dce8f6;color:#2b4a75}
+.pd-tags span.strong{background:#e8f8f1;border-color:#bfe8d7;color:#0b6b4f}
+.pd-note{font-size:9.2px;line-height:1.55;color:#6b7c94;margin-top:5px}
+
+/* 证书 / 语言 / 证件 */
+.pd-cert{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed #e8eef7;font-size:10px;color:#33445e}
+.pd-cert:last-child{border-bottom:0}
+.pd-cert b{font-size:9px;color:#1d4ed8;font-weight:600;white-space:nowrap}
+.pd-lang{display:grid;grid-template-columns:42px 1fr;gap:6px;font-size:9.8px;color:#33445e;padding:2px 0}
+.pd-lang span{color:#6b7c94}
+.pd-lang b{font-weight:500;color:#33445e}
+
+/* 底部 */
+.pd-foot{display:flex;justify-content:space-between;gap:12px;margin-top:18px;padding-top:8px;border-top:1px solid #e5ebf4;font-family:"Cascadia Mono",Consolas,monospace;font-size:8px;color:#9aa8ba}
+
+/* =========================================================
+   岗位 JD 纸张
+   ========================================================= */
+.pd-job-head{display:flex;gap:13px;align-items:flex-start;padding-bottom:14px;border-bottom:2px solid #1d4ed8}
+.pd-job-logo{flex:0 0 46px;height:46px;border-radius:9px;display:grid;place-items:center;font-size:20px;font-weight:800;color:#fff;background:linear-gradient(135deg,#1e3a8a,#2563eb);box-shadow:0 4px 12px rgba(37,99,235,.25)}
+.pd-job-id{flex:1;min-width:0}
+.pd-job-company{font-size:10px;color:#5a6a83}
+.pd-job-title{font-size:21px;line-height:1.25;color:#0e1b30;font-weight:800;margin-top:1px}
+.pd-job-title span{font-size:9px;font-weight:600;color:#fff;background:#0f766e;border-radius:3px;padding:1.5px 5px;margin-left:5px;vertical-align:3px}
+.pd-job-meta{font-size:9.8px;color:#7b8ba2;margin-top:3px;line-height:1.5}
+.pd-job-pay{flex:0 0 auto;text-align:right;line-height:1.1}
+.pd-job-pay b{font-size:20px;color:#b91c1c;letter-spacing:.2px}
+.pd-job-pay span{display:block;font-size:8.5px;color:#9a5b09;margin-top:3px}
+.pd-duty{counter-reset:pd;list-style:none;margin:0;padding:0}
+.pd-duty li{counter-increment:pd;position:relative;padding-left:17px;font-size:10.5px;line-height:1.65;color:#33445e;margin-bottom:3px}
+.pd-duty li::before{content:counter(pd);position:absolute;left:0;top:1px;width:12px;height:12px;border-radius:3px;display:grid;place-items:center;font-family:"Cascadia Mono",Consolas,monospace;font-size:7.5px;color:#1d4ed8;background:#eaf2fd}
+.pd-req-hard,.pd-req-pref{list-style:none;margin:0;padding:0}
+.pd-req-hard li,.pd-req-pref li{position:relative;padding-left:13px;font-size:10.2px;line-height:1.55;color:#33445e;margin-bottom:2px}
+.pd-req-hard li::before{content:"✓";position:absolute;left:0;top:0;font-size:9px;color:#059669;font-weight:700}
+.pd-req-pref li::before{content:"·";position:absolute;left:2px;top:0;color:#d97706;font-weight:900}
+.pd-req-t{font-size:8.5px;letter-spacing:.8px;color:#059669;font-weight:700;margin:6px 0 3px}
+.pd-req-t.pref{color:#b45309}
+.pd-match{background:#eef5ff;border:1px solid #d8e6fb;border-radius:7px;padding:9px 10px}
+.pd-match-score{display:flex;align-items:baseline;gap:6px}
+.pd-match-score b{font-family:"Cascadia Mono",Consolas,monospace;font-size:30px;letter-spacing:-1.5px;color:#1d4ed8;line-height:1}
+.pd-match-score span{font-size:9px;color:#5a6a83}
+.pd-match-score em{font-style:normal;margin-left:auto;font-size:8px;color:#0f766e}
+.pd-match-row{display:grid;grid-template-columns:34px 1fr 30px;gap:5px;align-items:center;margin-top:5px;font-size:8.5px;color:#5a6a83}
+.pd-match-row .bar{height:3px;border-radius:2px;background:#dbe6f4;overflow:hidden}
+.pd-match-row .bar i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#2563eb,#38bdf8)}
+.pd-match-row b{font-family:"Cascadia Mono",Consolas,monospace;font-size:8px;color:#33445e;text-align:right}
+.pd-match-gap{margin-top:6px;padding-top:6px;border-top:1px dashed #d8e6fb;font-size:8.8px;line-height:1.55;color:#9a5b09}
+
+/* 窄屏 */
+@media (max-width:980px){
+  .paperdoc{padding:22px 20px 18px}
+  .pd-body{grid-template-columns:1fr;gap:16px}
+  .pd-side{order:2}
+  .pd-head{flex-wrap:wrap}
+  .pd-job-head{flex-wrap:wrap}
+  .pd-job-pay{text-align:left;margin-left:59px}
+}
+@media (max-width:600px){
+  .docwrap{padding:10px}
+  .paperdoc{padding:16px 14px}
+  .pd-name{font-size:20px}
+  .pd-job-title{font-size:18px}
+}
+
+/* 打印：只留纸张 */
+@media print{
+  body.printing-resume .docwrap{padding:0 !important}
+  body.printing-resume .mt-doc-top{display:none !important}
+  body.printing-resume .paperdoc{
+    max-width:none !important;width:100% !important;padding:0 !important;
+    box-shadow:none !important;border-radius:0 !important;
+  }
+  body.printing-resume .pd-body{grid-template-columns:1.45fr .95fr !important}
+  body.printing-resume .pd-side{background:#fff !important;border-color:#ddd !important}
+}
+
+/* 简历底部整行信息 */
+.pd-bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:16px;padding-top:12px;border-top:1px solid #e5ebf4}
+.pd-bottom .pd-sec{margin-bottom:0}
+@media(max-width:980px){.pd-bottom{grid-template-columns:1fr;gap:12px}}
