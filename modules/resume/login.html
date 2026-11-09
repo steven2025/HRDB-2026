@@ -629,7 +629,7 @@ html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color
   </div>
 </div>
 
-<script src="js/hp-bridge.js"></script>
+<script src="js/hp-bridge.js?v=20261109-login2"></script>
 <script>
 (function(){
   'use strict';
@@ -788,11 +788,15 @@ html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color
       err('');
       var role = b.dataset.role;
       var accountId = b.dataset.acct || '';
-      if(!window.HPBridge || !window.HPBridge.isOnline()){ goApp(role); return; }
+      if(!window.HPBridge){ err('登录组件未加载，请刷新页面'); return; }
       b.disabled = true;
       var nm = b.querySelector('.nm') ? b.querySelector('.nm').textContent : role;
       tip('正在以「' + nm + '」身份进入…', 'var(--accent)');
-      window.HPBridge.login(role, { accountId: accountId }).then(function(){
+      Promise.resolve(window.HP_READY).catch(function(){ return null; }).then(function(){
+        return window.HPBridge.isOnline() ? true : window.HPBridge.reconnect();
+      }).then(function(){
+        return window.HPBridge.login(role, { accountId: accountId });
+      }).then(function(){
         goApp(role);
       }).catch(function(ex){
         b.disabled = false;
@@ -812,7 +816,7 @@ html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color
       tip('● 已连接后端 · 支持密码 / 验证码登录', 'var(--success)');
       refreshAccounts();
     } else {
-      tip('○ 未检测到后端服务 · 当前为离线演示模式');
+      tip('○ 暂未连接云服务 · 点击演示账号将重新连接');
     }
   }
 

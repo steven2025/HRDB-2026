@@ -801,7 +801,7 @@
 
   // ---------------------------------------------------------------- 启动
   function health() {
-    return fetchJson('/api/health', { auth: false, timeout: 1500 })
+    return fetchJson('/api/health', { auth: false, timeout: 15000 })
       .then(function (r) { return !!(r && r.ok); })
       .catch(function () { return false; });
   }
@@ -855,6 +855,13 @@
     fileMode: FILE_MODE,
     state: state,
     isOnline: function () { return state.online; },
+    reconnect: function () {
+      return health().then(function (online) {
+        state.online = online;
+        if (!online) throw new Error('云服务暂时未连接，请稍后重试');
+        return true;
+      });
+    },
     isAuthed: function () { return !!state.data; },
     getUser: function () { return state.user; },
     /** 三端分离：只有演示账号能在三端之间切换
