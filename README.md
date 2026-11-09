@@ -1,27 +1,28 @@
 # 全球劳务外派智能平台
 
-## GitHub Pages 发布
+- 答辩汇报：https://steven2025.github.io/HRDB-2026/
+- 程序主页：https://steven2025.github.io/HRDB-2026/platform.html
 
-将本文件夹内全部文件和目录上传到同一个 GitHub 仓库的根目录，包括 .nojekyll。不要只上传 ZIP，也不要再套一层目录。
+## 汇报页面
 
-仓库 Settings → Pages → Deploy from a branch → main → / (root) → Save。部署完成后访问 GitHub 提供的 Pages 地址。
+团队及成果概要 → 项目背景 → 需求挖掘梳理 → 开发技术及过程 → 成果展示 → 成果评价。
 
-## 已接入入口
+首页右侧使用本地地球背景；项目背景有四张动图和静态阅读版；需求页一次呈现；开发页使用四列技术表；成果评价包含视频与两张使用截图。视频和部分图片来自 COS，项目背景动图与地球脚本随仓库发布。
 
-点击右侧流程环的彩色名称或对应节点，在统一模块窗口中打开。三个模块顶部始终提供“返回主页”。包内模块直接打开时也有返回按钮。外部面试站点若限制嵌入，可点“新窗口打开”，关闭新窗口后回到原窗口，再点“返回主页”。
+## 模块入口
 
-- 智能简历匹配：modules/resume/index.html，已将独立发布版完整放入包内。
-- 多语言AI面试：https://steven2025.github.io/haiwai/ ，使用既有外部站点。
-- 合规签约：heguiqianyue.html，使用用户提供的页面。
+module.html 统一提供返回 platform.html 的入口。
 
-三个展示环节的其余编号与名称保留。主页不含故事开场动画，流程环动态效果保留。
+- 智能简历匹配：modules/resume/index.html，使用既有腾讯云函数。
+- 多语言AI面试：https://steven2025.github.io/haiwai/ 。
+- 合规签约：heguiqianyue.html 。
 
-## 使用说明
+## 部署与本地预览
 
-本地可双击 index.html，也可运行 python -m http.server 8080 后访问 http://localhost:8080/ 。
+GitHub Pages 使用 main 分支仓库根目录。无需 npm 构建。修改 index.html 和所依赖的 assets/、cailiao/ 后同步提交。
 
-智能简历匹配仍需要原腾讯云服务和有效账号；新 Pages 域名需由该后端允许跨域。静态文件包不包含服务器或数据库。多语言面试需要网络，功能是否可用取决于对应站点。
+本地可使用 python -m http.server 8080，再打开 http://localhost:8080/ 。
 
-已检查本地资源引用、入口路径、JavaScript 语法及压缩包内容。未使用真实账号测试业务，也未发布到 GitHub。
+## 检查范围
 
-返回功能已完成静态路径及脚本检查；外部面试网站的嵌入策略、摄像头与麦克风权限仍需在线验证。
+2026-11-10：本轮汇报页脚本语法、数据结构、页面顺序、地球背景依赖及 COS 视频/图片 HTTP 检查通过。开发视频的 COS 大小与本地新版一致。未据此宣称所有业务流程、摄像头麦克风或全部浏览器均已完整验收。
