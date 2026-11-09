@@ -1162,6 +1162,9 @@ function jumpToEnd() {
     i.style.width = i.dataset.w + '%';
     row.querySelector('.rk-score').textContent = i.dataset.w;
   });
+  /* 综合分与榜单同步：优先代表人物分，其次榜首分（避免出现 0 / -- 分） */
+  const topScore = (CURRENT.top && CURRENT.top.score) || (RANKING[0] && RANKING[0].s);
+  if (topScore != null && topScore !== '') hudScore(topScore);
 
   caption(L10('已跳到结果态：可停留讲解排名与分项得分','Jumped to results: you can stay to review ranking and sub-scores'), 3000);
 }
@@ -1897,7 +1900,9 @@ setTip(L10('分析完成 · 共 <b>' + total + '</b> 个 · 点右上角「查�
 
 async function initPage() {
   HPS_BATCH_ACTIVE = false;   // 每次挂载重置，避免上一轮状态残留
-  for (let i = 0; i < 5; i++) $('#rankSkel').appendChild(document.createElement('i'));
+  /* 骨架屏：markup 缺失时不要直接报错（曾出现 "#rankSkel of null" 导致整页初始化失败） */
+  var skelEl = document.getElementById('rankSkel');
+  if (skelEl) for (let i = 0; i < 5; i++) skelEl.appendChild(document.createElement('i'));
   syncFollowBtn();
   bindManualScroll();
 
@@ -1922,18 +1927,42 @@ async function initPage() {
         setTip('正在计算候选人排名…');
         let { rank, top, trace } = await loadCompany(jobId);
         const job = jobs.find((j) => j.id === jobId) || jobs[0];
-        const wantCand = candId || HPS.cand || (HPS.queue.length ? HPS.queue[HPS.qIndex] : '');
+        /* 勾选了几个就只看几个：批量分析时，榜单只保留选中的候选人 */
+        let list = rank.list || [];
+        if (HPS.queue && HPS.queue.length) {
+          const want = new Set(HPS.queue);
+          const filtered = list.filter((x) => want.has(x.candidateId));
+          if (filtered.length) list = filtered;
+        }
+        list = list.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+
+        /* 批量分析（勾选多人）：以榜单第一名为代表展示，避免“综合分 34 / 榜首 82”不一致；
+           单人分析仍按指定候选人。 */
+        const wantCand = candId || HPS.cand || (HPS.queue.length > 1 ? '' : (HPS.queue[0] || ''));
+        const pickedTop = list[0] || null;
         if (wantCand) {
-          const picked = (rank.list || []).find((x) => x.candidateId === wantCand);
+          const picked = list.find((x) => x.candidateId === wantCand);
           if (picked) {
             trace = await api('/api/match/trace?jobId=' + encodeURIComponent(jobId) + '&candidateId=' + encodeURIComponent(wantCand) + hpLangParam() + '&lang=' + ((window.HPI18N && window.HPI18N.lang()) || 'zh'));
             top = picked;
+          } else if (pickedTop) {
+            /* 选中的候选人不在当前榜单里：退回榜首，但分数/分项仍与榜单一致 */
+            trace = await api('/api/match/trace?jobId=' + encodeURIComponent(jobId) + '&candidateId=' + encodeURIComponent(pickedTop.candidateId) + hpLangParam() + '&lang=' + ((window.HPI18N && window.HPI18N.lang()) || 'zh'));
+            top = pickedTop;
           }
+        } else if (pickedTop && !trace) {
+          top = pickedTop;
         }
         if (!trace) throw new Error('没有候选人数据');
-        applyData({ mode: 'company', job, list: rank.list, trace, top });
+        applyData({ mode: 'company', job, list, trace, top });
         rebuildAll();
-        setTip('企业视角 · 候选 <b>' + rank.list.length + '</b> 人 · 最高 <b>' + (top ? top.score : '—') + '</b> 分 · 引擎 ' + (rank.engine || 'rules-v1'));
+        /* 数据到位后立刻把分数写实：否则榜单只有骨架、综合分停在 0/-- */
+        try { await jumpToResultInstant(); } catch (e) {}
+        hudScore(top ? top.score : (list[0] && list[0].score) || '--');
+        hudPhase(L10('已完成', 'Done'), false);
+        hudStep(STEPS.length, STEPS.length);
+        hudTimerStop();
+        setTip('企业视角 · 候选 <b>' + list.length + '</b> 人 · 最高 <b>' + (top ? top.score : '—') + '</b> 分 · 引擎 ' + (rank.engine || 'rules-v1'));
       };
 
       const firstJob = HPS.job && jobs.some((j) => j.id === HPS.job) ? HPS.job : jobs[0].id;
@@ -2061,7 +2090,12 @@ async function initPage() {
     document.querySelectorAll('.hps-host').forEach(function (el) {
       if (el !== root) el.innerHTML = '';
     });
-    root.innerHTML = window.__HPS_MARKUP;
+    root.innerHTML = window.__HPS_MARKUP || '';
+    /* 兜底：markup 尚未就绪（脚本顺序/缓存）时，等一拍再铺一次，避免整页初始化失败 */
+    if (!root.querySelector('#rankSkel')) {
+      await new Promise(function (r) { setTimeout(r, 60); });
+      if (window.__HPS_MARKUP) root.innerHTML = window.__HPS_MARKUP;
+    }
 
     // 顶部返回条（嵌在主程序里需要能回列表）
     const bar = document.createElement('div');
@@ -2108,7 +2142,12 @@ async function initPage() {
       try {
         /* 先铺好基础骨架并绑定交互，再用快照覆盖内容区，
            这样既保留事件绑定，又是离开前那一刻的样子。 */
-        root.innerHTML = window.__HPS_MARKUP;
+        root.innerHTML = window.__HPS_MARKUP || '';
+    /* 兜底：markup 尚未就绪（脚本顺序/缓存）时，等一拍再铺一次，避免整页初始化失败 */
+    if (!root.querySelector('#rankSkel')) {
+      await new Promise(function (r) { setTimeout(r, 60); });
+      if (window.__HPS_MARKUP) root.innerHTML = window.__HPS_MARKUP;
+    }
         await initPage();
         mounted = true;
         const keepBar = root.querySelector('.hps-backbar');

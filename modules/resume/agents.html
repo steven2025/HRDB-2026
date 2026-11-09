@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="premium">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>智能体运行台 · 海外用工派遣平台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234d8dff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M7 22V12l5 3.6L16 9l4 6.6L25 12v10z' fill='%23071020'/%3E%3C/svg%3E">
+<meta name="description" content="环球派遣 · 海外用工全周期平台：应聘者 / 企业 / 平台运营三端协同，8 阶段全流程、6 个智能体与可复核的治理机制。">
+<style>
+:root{
+  --bg:#0B1220; --surface:#101A2C; --surface-2:#16223A; --text:#E9EEF7; --text-2:#A7B6CE; --text-3:#8296B6;
+  --primary:#4D8DFF; --primary-weak:#16294D; --accent:#2DD4BF; --border:#223252;
+  --success:#4ADE80; --warning:#F0B429; --danger:#F87171;
+  --radius:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(1100px 520px at 80% -10%, #14203A 0%, #0B1220 60%);
+  color:var(--text); min-height:100vh; font-size:14px; line-height:1.65;
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 22px 56px}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 24px rgba(77,141,255,.35)}
+h1{font-size:20px;font-weight:700}
+.sub{font-size:12.5px;color:var(--text-3)}
+.spacer{flex:1}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.chip-i{background:#16294D;color:#7FB0FF}
+.chip-s{background:#0F2B2A;color:var(--accent)}
+.chip-w{background:#2A2413;color:var(--warning)}
+.chip-g{background:var(--surface-2);color:var(--text-2)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;border:1px solid transparent;cursor:pointer;font-family:inherit;transition:filter .15s}
+.btn-p{background:linear-gradient(135deg,var(--primary),#2F6FE0);color:#fff;box-shadow:0 6px 18px rgba(77,141,255,.3)}
+.btn-p:hover{filter:brightness(1.08)}
+.btn-o{background:transparent;color:var(--text-2);border-color:var(--border)}
+.btn-o:hover{background:var(--surface-2);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12.5px;border-radius:8px}
+select,input,textarea{font-family:inherit;font-size:13px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--primary)}
+.grid{display:grid;gap:16px}
+.cards{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.card h3{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card .desc{font-size:12.5px;color:var(--text-2);margin-top:8px;min-height:52px}
+.card .tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.card .tool{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--surface-2);color:var(--text-3);border:1px solid var(--border);font-family:ui-monospace,Consolas,monospace}
+.card .foot{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.layout{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-top:18px;align-items:start}
+@media(max-width:960px){.layout{grid-template-columns:1fr}}
+.console{display:flex;flex-direction:column;gap:10px}
+.console .row{display:flex;gap:10px;align-items:center}
+.console textarea{width:100%;height:96px;resize:vertical}
+.answer{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px;white-space:pre-wrap;word-break:break-word;min-height:120px}
+.answer .meta{display:block;margin-top:10px;font-size:11.5px;color:var(--text-3);white-space:normal}
+.answer details{margin-top:10px;font-size:11.5px;color:var(--text-3)}
+.answer summary{cursor:pointer;color:var(--text-2);font-weight:600}
+.answer .step{margin-top:4px}
+.answer .src{margin-top:8px;display:block;font-size:11.5px;color:var(--text-3)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:11.5px;color:var(--text-3);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:11.5px}
+.tip{font-size:12px;color:var(--text-3)}
+.tag-ok{color:var(--success)}
+.hide{display:none!important}
+
+/* ---------- 科技感增强层 ---------- */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(77,141,255,.055) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(77,141,255,.055) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(1100px 640px at 50% 0%, #000 0%, transparent 85%);
+}
+.wrap{position:relative;z-index:1}
+h1{letter-spacing:.3px}
+h1 .grad, h2 .grad{
+  background:linear-gradient(120deg,#9fc2ff,#22d3ee 60%,#2dd4bf);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.card{
+  background:linear-gradient(180deg, rgba(20,32,54,.92), rgba(13,22,38,.94));
+  border:1px solid rgba(64,92,138,.55);
+  box-shadow:0 12px 34px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(10px);position:relative;overflow:hidden;
+  transition:transform .2s, border-color .2s, box-shadow .2s;
+}
+.card::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,#4d8dff,#22d3ee,transparent);opacity:.75;
+}
+.card:hover{border-color:rgba(77,141,255,.45);transform:translateY(-1px);box-shadow:0 16px 44px rgba(0,0,0,.5)}
+.btn{
+  background:linear-gradient(135deg,#4d8dff,#2563eb 60%,#0ea5b7);border:1px solid rgba(122,170,255,.35);
+  box-shadow:0 8px 22px rgba(37,99,235,.32), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn-o{background:rgba(22,34,58,.55);border-color:rgba(64,92,138,.7);box-shadow:none}
+.btn-o:hover{border-color:rgba(77,141,255,.6);background:rgba(77,141,255,.10);filter:none}
+select,input,textarea{background:rgba(7,13,26,.72)!important;border-color:rgba(64,92,138,.7)!important;color:var(--text)}
+select:focus,input:focus,textarea:focus{outline:none;border-color:#4d8dff!important;box-shadow:0 0 0 3px rgba(77,141,255,.14)}
+table th{color:var(--text-3);letter-spacing:.4px}
+table tr:hover td{background:rgba(77,141,255,.06)}
+.chip{border:1px solid rgba(64,92,138,.6)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(88,122,178,.45);border-radius:9px;border:2px solid transparent;background-clip:content-box}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M9 10h.01M15 10h.01M9 15c1 1 2 1.5 3 1.5s2-.5 3-1.5" stroke-linecap="round"/></svg>
+    </div>
+    <div>
+      <h1>智能体运行台</h1>
+      <div class="sub">已部署智能体 · 工具链 · 试跑与运行记录</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip chip-g" id="providerChip">检测中…</span>
+    <select id="roleSelect" title="切换身份">
+      <option value="persona">应聘者</option>
+      <option value="company">企业</option>
+      <option value="assurance">保障部</option>
+    </select>
+    <a class="btn btn-o btn-sm" href="app.html" id="toApp">进入工作台 →</a>
+  </div>
+
+  <div class="grid cards" id="agentCards"></div>
+
+  <div class="layout">
+    <div class="card console">
+      <h3>试跑控制台 <span class="chip chip-i" id="consoleAgent">出海顾问</span></h3>
+      <div class="row">
+        <select id="agentSelect" style="flex:1"></select>
+      </div>
+      <textarea id="consoleInput" placeholder="输入问题，例如：阿尔及利亚签证要什么材料？ / 我的进度到哪一步了？ / 核对一下本月账单"></textarea>
+      <div class="row">
+        <button class="btn btn-p" id="runBtn">运行智能体</button>
+        <button class="btn btn-o btn-sm" id="clearBtn">清空结果</button>
+        <span class="tip" id="runHint">回车运行 · 结果含工具调用链与来源</span>
+      </div>
+      <div class="answer" id="answer">等待运行…</div>
+    </div>
+
+    <div class="card">
+      <h3>最近运行记录 <span class="chip chip-g" id="runCount">0</span></h3>
+      <div style="margin-top:10px;max-height:520px;overflow:auto">
+        <table>
+          <thead><tr><th>时间</th><th>智能体</th><th>问题 / 模式</th></tr></thead>
+          <tbody id="runRows"><tr><td colspan="3" class="tip">暂无记录</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip" style="margin-top:22px">
+    说明：未配置大模型时，智能体使用「离线规则引擎」——同样调用后端工具（合同审计 / 签证预审 / 风险扫描 / 结算核对），结论可复现、可审计；配置 <span class="mono">HP_LLM_BASE_URL</span> 与 <span class="mono">HP_LLM_API_KEY</span> 后自动切换为大模型 + function calling。
+  </div>
+</div>
+
+<script src="js/hp-config.js"></script>
+<script src="js/hp-bridge.js"></script>
+<script>
+(function(){
+  'use strict';
+  var state = { role: 'persona', agents: [], provider: null };
+
+  function $(s, r){ return (r||document).querySelector(s); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function chip(t, cls){ return '<span class="chip '+cls+'">'+esc(t)+'</span>'; }
+
+  function renderProvider(){
+    var p = state.provider;
+    var el = $('#providerChip');
+    if(!p){ el.textContent = '离线演示'; el.className = 'chip chip-g'; return; }
+    if(p.mode === 'llm'){
+      el.textContent = '大模型 · ' + (p.model || '在线');
+      el.className = 'chip chip-s';
+      el.title = p.endpoint || '';
+    } else {
+      el.textContent = '离线规则引擎';
+      el.className = 'chip chip-i';
+      el.title = '未配置 HP_LLM_BASE_URL / HP_LLM_API_KEY，使用确定性规则 + 工具链';
+    }
+  }
+
+  function renderAgents(){
+    var wrap = $('#agentCards');
+    if(!state.agents.length){
+      wrap.innerHTML = '<div class="card"><h3>未登录</h3><div class="desc">请选择身份后点击「进入工作台」，或直接点「运行智能体」用当前身份试跑。</div></div>';
+      return;
+    }
+    wrap.innerHTML = state.agents.map(function(a){
+      var stateChip = a.enabled === false ? chip('已停用','chip-w') : chip(a.llmOnly ? '需大模型' : '已部署', a.llmOnly ? 'chip-w' : 'chip-s');
+      return '<div class="card" data-agent="'+esc(a.id)+'">'+
+        '<h3>'+esc(a.name)+' '+stateChip+' <span class="chip chip-g">v'+esc(a.version||'1.0.0')+'</span></h3>'+
+        '<div class="desc">'+esc(a.desc)+'</div>'+
+        '<div class="tools">'+(a.tools||[]).map(function(t){ return '<span class="tool">'+esc(t)+'</span>'; }).join('')+'</div>'+
+        '<div class="foot"><span class="tip">入口：'+esc(a.entry||'—')+'</span><button class="btn btn-o btn-sm" data-run="'+esc(a.id)+'">试跑</button></div>'+
+      '</div>';
+    }).join('');
+    wrap.querySelectorAll('[data-run]').forEach(function(b){
+      b.addEventListener('click', function(){
+        $('#agentSelect').value = b.dataset.run;
+        syncConsoleAgent();
+        $('#consoleInput').focus();
+      });
+    });
+  }
+
+  function syncConsoleAgent(){
+    var sel = $('#agentSelect');
+    var agent = state.agents.filter(function(a){ return a.id === sel.value; })[0];
+    $('#consoleAgent').textContent = agent ? agent.name : '—';
+  }
+
+  function fillAgentSelect(){
+    var sel = $('#agentSelect');
+    sel.innerHTML = state.agents.map(function(a){
+      return '<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>';
+    }).join('');
+    syncConsoleAgent();
+  }
+
+  function renderAnswer(r){
+    var html = esc(r.answer).replace(/\n/g, '<br>');
+    if(r.steps && r.steps.length){
+      html += '<details><summary>工具调用链 · '+r.steps.length+' 步</summary>' +
+        r.steps.map(function(s){
+          return '<div class="step">· '+esc(s.tool || s.type)+'：'+esc(s.summary || '')+'</div>';
+        }).join('') + '</details>';
+    }
+    var cites = (r.citations||[]).map(function(c){ return c.id + '《' + c.title + '》'; }).join('、');
+    html += '<span class="src">模式：'+(r.mode === 'llm' ? '大模型' : r.mode === 'rules-fallback' ? '规则引擎（大模型回退）' : '规则引擎')+
+      ' · 耗时 '+r.tookMs+'ms'+(cites ? ' · 来源：'+esc(cites) : '')+'</span>';
+    $('#answer').innerHTML = html;
+  }
+
+  function renderRuns(runs){
+    var rows = $('#runRows');
+    $('#runCount').textContent = runs.length;
+    if(!runs.length){ rows.innerHTML = '<tr><td colspan="3" class="tip">暂无记录</td></tr>'; return; }
+    rows.innerHTML = runs.slice(0, 30).map(function(r){
+      var d = r.at ? new Date(r.at) : null;
+      var t = d && !isNaN(d.getTime()) ? d.toLocaleTimeString('zh-CN', { hour12: false }) : '';
+      return '<tr><td class="mono">'+esc(t)+'</td><td>'+esc(r.agentName || r.agentId)+'</td><td>'+esc((r.input||'').slice(0, 40))+'<div class="tip">'+esc(r.mode)+'</div></td></tr>';
+    }).join('');
+  }
+
+  function loadRuns(){
+    if(!window.HPBridge.isOnline()) return;
+    window.HPBridge.api.agentsRuns()
+      .then(function(d){ renderRuns((d && d.runs) || []); })
+      .catch(function(){ /* 忽略 */ });
+  }
+
+  function enter(role){
+    state.role = role;
+    try{ localStorage.setItem('hp-role', role); }catch(e){}
+    if(!window.HPBridge.isOnline()){
+      state.agents = []; renderAgents(); renderProvider();
+      $('#answer').innerHTML = '<span style="color:var(--danger)">未连接后端</span>：请先运行 <span class="mono">node server/index.mjs</span> 后刷新本页。';
+      return Promise.resolve();
+    }
+    return window.HPBridge.login(role).then(function(){
+      var data = window.HPBridge.getData() || {};
+      state.provider = data.provider || null;
+      state.agents = data.agents || [];
+      renderProvider(); renderAgents(); fillAgentSelect(); loadRuns();
+      $('#roleSelect').value = role;
+      var app = $('#toApp');
+      if(app) app.href = 'app.html#/' + role;
+    }).catch(function(err){
+      $('#answer').textContent = '登录失败：' + (err.message || err);
+    });
+  }
+
+  function run(){
+    var input = $('#consoleInput').value.trim();
+    if(!input){ $('#consoleInput').focus(); return; }
+    if(!window.HPBridge.isOnline()){ $('#answer').textContent = '未连接后端，无法运行智能体。'; return; }
+    var agentId = $('#agentSelect').value;
+    if(!agentId){ $('#answer').textContent = '请先选择智能体。'; return; }
+    var btn = $('#runBtn');
+    btn.disabled = true; btn.textContent = '运行中…';
+    $('#answer').innerHTML = '<span class="tip">正在调用工具链…</span>';
+    var started = Date.now();
+    window.HPAgent.ask(input, agentId).then(function(r){
+      $('#answer').innerHTML = '';
+      renderAnswer(Object.assign({}, r, { tookMs: r.raw ? r.raw.tookMs : (Date.now() - started), mode: r.mode, steps: r.steps, citations: r.citations }));
+      loadRuns();
+    }).catch(function(err){
+      $('#answer').innerHTML = '<span style="color:var(--danger)">运行失败：'+esc(err.message || '未知错误')+'</span>';
+    }).finally(function(){
+      btn.disabled = false; btn.textContent = '运行智能体';
+    });
+  }
+
+  $('#runBtn').addEventListener('click', run);
+  $('#clearBtn').addEventListener('click', function(){ $('#answer').textContent = '等待运行…'; });
+  $('#agentSelect').addEventListener('change', syncConsoleAgent);
+  $('#roleSelect').addEventListener('change', function(e){ enter(e.target.value); });
+  $('#consoleInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); run(); }
+  });
+
+  window.HP_READY.then(function(){
+    var saved = 'persona';
+    try{ saved = localStorage.getItem('hp-role') || 'persona'; }catch(e){}
+    $('#roleSelect').value = saved;
+    enter(saved);
+  });
+})();
+</script>
+<a id="platform-home-return" href="../../index.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
+</body>
+</html>

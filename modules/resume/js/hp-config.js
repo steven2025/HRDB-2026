@@ -13,30 +13,8 @@
  * ===================================================================== */
 window.HP_CLOUD_BASE = 'https://1506063666-34lsbn3uv2.ap-chengdu.tencentscf.com';
 
-window.HP_API_BASE = (function () { return window.HP_CLOUD_BASE;
-  // GitHub Pages：静态托管没有同源后端，默认走腾讯云函数
-  if (/\.github\.io$/i.test(location.hostname)) return window.HP_CLOUD_BASE;
-  try {
-    var q = new URLSearchParams(location.search).get('api');
-    if (q === 'cloud' || q === 'local' || q === 'same') {
-      try { sessionStorage.setItem('hp-api-mode', q); } catch (e) {}
-    }
-    if (q === 'cloud') return window.HP_CLOUD_BASE;
-    if (q === 'local' || q === 'same') return '';
-
-    var saved = localStorage.getItem('hp-api-base');
-    if (saved !== null) return String(saved || '');
-
-    var mode = '';
-    try { mode = sessionStorage.getItem('hp-api-mode') || ''; } catch (e) {}
-    if (mode === 'cloud') return window.HP_CLOUD_BASE;
-    if (mode === 'local' || mode === 'same') return '';
-
-    return '';
-  } catch (e) {
-    return '';
-  }
-})();
+/* 此发布副本使用已部署云函数；不依赖 GitHub Pages 同源 /api。 */
+window.HP_API_BASE = window.HP_CLOUD_BASE;
 
 
 /* 静态托管（GitHub Pages / file://）没有同源 /api：
@@ -44,7 +22,7 @@ window.HP_API_BASE = (function () { return window.HP_CLOUD_BASE;
 (function () {
   if (window.__hpCloudFetchWrapped) return;
   window.__hpCloudFetchWrapped = true;
-  var base = window.HP_CLOUD_BASE;
+  var base = window.HP_API_BASE || '';
   if (!base) return;
   var orig = window.fetch;
   window.fetch = function (input, init) {

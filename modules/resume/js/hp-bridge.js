@@ -801,7 +801,7 @@
 
   // ---------------------------------------------------------------- 启动
   function health() {
-    return fetchJson('/api/health', { auth: false, timeout: 8000 })
+    return fetchJson('/api/health', { auth: false, timeout: 1500 })
       .then(function (r) { return !!(r && r.ok); })
       .catch(function () { return false; });
   }

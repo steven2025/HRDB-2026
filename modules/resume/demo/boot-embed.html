@@ -1,1 +1,556 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>智能简历匹配</title><style>body{margin:0;min-height:100vh;display:grid;place-content:center;background:#061a26;color:#eaf7ff;font:16px/1.8 system-ui;padding:24px;box-sizing:border-box}p{max-width:540px;color:#9db2cb}</style></head><body><h2>智能简历匹配</h2><p>原始文件未包含开机动画，可点击上方“跳过开机”继续。</p></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CORE ONLINE · 系统运转</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#03040A;color:#EAF6FF;font-family:"Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+#gate{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#03040A}
+#gate.off{display:none}
+.g1{font-family:Consolas,monospace;font-size:9px;letter-spacing:.4em;color:#5A7690}
+.g2{font-size:30px;font-weight:200;letter-spacing:.4em;padding-left:.4em}
+.g3{width:1px;height:54px;background:linear-gradient(180deg,transparent,#6FE3FF)}
+.g-btn{margin-top:10px;height:44px;padding:0 40px;border:1px solid #6FE3FF;background:transparent;color:#6FE3FF;font-size:12px;letter-spacing:.26em}
+.g-btn:hover{background:#6FE3FF;color:#03040A}
+.g-hint{font-size:10px;letter-spacing:.16em;color:#5A7690}
+
+#scene{position:fixed;inset:0;opacity:0;pointer-events:none;transition:opacity .6s;background:
+  radial-gradient(60% 55% at 50% 48%,#0A1526 0%,#03040A 72%)}
+#scene.on{opacity:1;pointer-events:auto}
+#cv{position:absolute;inset:0;width:100%;height:100%}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(75% 70% at 50% 48%,transparent 55%,rgba(0,0,0,.75))}
+.grid{position:absolute;inset:-10%;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(111,227,255,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(111,227,255,.10) 1px,transparent 1px);
+  background-size:56px 56px;transform:perspective(700px) rotateX(58deg) translateY(12%) scale(1.5);transform-origin:50% 60%;
+  mask-image:radial-gradient(50% 50% at 50% 60%,#000,transparent 75%);-webkit-mask-image:radial-gradient(50% 50% at 50% 60%,#000,transparent 75%)}
+
+/* 核心 */
+.core{position:absolute;left:50%;top:48%;width:420px;height:420px;transform:translate(-50%,-50%);pointer-events:none}
+.ring{position:absolute;left:50%;top:50%;border:1px solid rgba(111,227,255,.35);border-radius:50%;transform-style:preserve-3d}
+.ring.r1{width:300px;height:300px;margin:-150px 0 0 -150px;animation:spinY 14s linear infinite}
+.ring.r2{width:380px;height:380px;margin:-190px 0 0 -190px;border-style:dashed;border-color:rgba(255,79,216,.35);animation:spinX 20s linear infinite}
+.ring.r3{width:460px;height:460px;margin:-230px 0 0 -230px;border-color:rgba(111,227,255,.16);animation:spinY 30s linear infinite reverse}
+@keyframes spinY{0%{transform:rotateX(68deg) rotateZ(0)}100%{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes spinX{0%{transform:rotateY(72deg) rotateZ(0)}100%{transform:rotateY(72deg) rotateZ(-360deg)}}
+.glow{position:absolute;left:50%;top:50%;width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;
+  background:radial-gradient(circle,rgba(111,227,255,.55),rgba(111,227,255,.08) 45%,transparent 70%);filter:blur(8px);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.15);opacity:.75}}
+
+/* 模块节点 */
+.node{position:absolute;display:flex;align-items:center;gap:12px;font-size:16px;letter-spacing:.06em;color:#7C9CB5;opacity:0;transform:translateY(8px)}
+.node.on{animation:nodeIn .5s ease forwards, nodeFloat 3.6s ease-in-out .7s infinite}
+@keyframes nodeIn{to{opacity:1;transform:none}}
+@keyframes nodeFloat{50%{transform:translateY(-4px)}}
+.node i{width:9px;height:9px;border-radius:50%;background:#2A4A63;transition:.4s}
+.node.on{opacity:1;color:#DDF3FF}
+.node.on i{background:#6FE3FF;box-shadow:0 0 12px #6FE3FF}
+.node.on b{color:#6FE3FF;font-weight:400;font-family:Consolas,monospace;font-size:9px}
+.node b{display:none}
+svg.links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+svg.links path{fill:none;stroke:rgba(111,227,255,.7);stroke-width:2.8;filter:drop-shadow(0 0 6px rgba(111,227,255,.45));stroke-dasharray:3 7;animation:dash 1.4s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-20}}
+
+/* HUD */
+.hud{position:absolute;inset:26px;pointer-events:none;font-family:Consolas,monospace}
+.hud .c{position:absolute;width:46px;height:46px;border:1px solid rgba(111,227,255,.5)}
+.hud .tl{left:0;top:0;border-right:0;border-bottom:0}
+.hud .tr{right:0;top:0;border-left:0;border-bottom:0}
+.hud .bl{left:0;bottom:0;border-right:0;border-top:0}
+.hud .br{right:0;bottom:0;border-left:0;border-top:0}
+.tel{position:absolute;font-size:10.5px;letter-spacing:.18em;color:#5A7690;line-height:1.9}
+.tel b{color:#BFE9FF;font-weight:400}
+.tel.tl{left:58px;top:6px}.tel.tr{right:58px;top:6px;text-align:right}
+.tel.bl{left:58px;bottom:6px}.tel.br{right:58px;bottom:6px;text-align:right}
+.title{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);text-align:center;opacity:0;transition:.8s}
+.title.on{opacity:1}
+.title b{display:block;font-family:Bahnschrift,"Arial Narrow",sans-serif;font-size:44px;font-weight:400;letter-spacing:.36em;padding-left:.36em}
+.title span{display:block;margin-top:8px;font-family:Consolas,monospace;font-size:8.5px;letter-spacing:.5em;color:#6B87A0}
+.bottom{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);width:520px;z-index:9}
+.track{height:2px;background:rgba(111,227,255,.15);position:relative;overflow:hidden}
+.track i{position:absolute;left:0;top:0;bottom:0;width:0;background:#6FE3FF;box-shadow:0 0 12px #6FE3FF}
+.meta{display:flex;justify-content:space-between;margin-top:9px;font-family:Consolas,monospace;font-size:9px;letter-spacing:.2em;color:#5A7690}
+.meta b{color:#EAF6FF;font-weight:400;font-size:13px}
+.status{position:absolute;left:50%;top:70%;transform:translateX(-50%);font-family:Consolas,monospace;
+  font-size:15px;letter-spacing:.34em;color:#6FA8CF;opacity:0;transition:.8s}
+.status.on{opacity:1}
+.status b{color:#BFE9FF;font-weight:400}
+.tt{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:720px;height:84px;text-align:center;z-index:8}
+.tt .ln{font-size:12px;line-height:2.05;letter-spacing:.14em;color:#6FA8CF;opacity:0;transition:opacity .45s ease}
+.tt .ln.on{opacity:.85}
+.tt .ln.cur{opacity:1;color:#EAF6FF}
+@keyframes blink{50%{opacity:0}}
+@keyframes blink{50%{opacity:0}}}
+.tt .ln.cur::after{content:"";display:inline-block;width:1px;height:12px;margin-left:4px;background:#6FE3FF;vertical-align:-1px;animation:blink .7s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.back{position:absolute;right:40px;bottom:34px;border:0;background:none;color:#5A7690;font-family:Consolas,monospace;font-size:9px;letter-spacing:.2em}
+.back:hover{color:#6FE3FF}
+.flash{position:absolute;inset:0;background:#EAF6FF;opacity:0;pointer-events:none}
+
+/* 侧栏与日志 */
+.side{position:absolute;top:132px;width:252px;font-family:Consolas,monospace;z-index:6}
+.side.left{left:40px}
+.side.right{right:40px}
+.sh{font-size:8px;letter-spacing:.26em;color:#5A7690;margin-bottom:12px}
+.prow{display:flex;align-items:center;gap:11px;margin:16px 0;font-size:13px;color:#5A7690;transition:.3s}
+.prow i{width:5px;height:5px;border-radius:50%;background:#2A4A63;flex:0 0 5px;transition:.3s}
+.prow em{margin-left:auto;font-style:normal;font-size:11px;letter-spacing:.1em}
+.prow.on{color:#BFE9FF}
+.prow.on i{background:#6FE3FF;box-shadow:0 0 8px #6FE3FF}
+.prow.on em{color:#6FE3FF}
+.orow{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid rgba(111,227,255,.09);
+  font-family:Consolas,monospace;font-size:9px;color:#5A7690;transition:.3s}
+.orow b{color:#3F5A70;font-weight:400;font-size:15px}
+.orow.on{color:#9FC3D8}
+.orow.on b{color:#EAF6FF}
+.log{position:absolute;left:40px;bottom:86px;width:620px;font-family:Consolas,monospace;font-size:10.5px;line-height:1.95;color:#5A7690;z-index:6}
+.log b{color:#6FE3FF;font-weight:400}
+.stream{opacity:0;transition:opacity .7s .45s;position:absolute;right:14px;bottom:112px;width:300px;height:530px;z-index:8;overflow:hidden;background:none;border:0;box-shadow:none}
+.stream::before,.stream::after{display:none}
+.stream::before{top:0;
+  background:linear-gradient(90deg,transparent,#2F8FE0 14%,#9BE7FF 50%,#2F8FE0 82%,transparent);
+  box-shadow:0 0 14px rgba(90,190,255,.75);
+  clip-path:polygon(0 0,100% 0,calc(100% - 18px) 100%,0 100%)}
+.stream::after{bottom:0;
+  background:linear-gradient(90deg,transparent,#2F8FE0 14%,#9BE7FF 50%,#2F8FE0 82%,transparent);
+  box-shadow:0 0 14px rgba(90,190,255,.75);
+  clip-path:polygon(18px 0,100% 0,100% 100%,0 100%)}
+.stream .tick{position:absolute;top:0;width:1px;height:10px;background:#9BE7FF;box-shadow:0 0 8px #6FE3FF;z-index:3}
+.stream .tick.b{bottom:0;top:auto}
+.s-body{position:absolute;inset:26px 0 0;overflow:hidden;padding:0 10px 0 0;text-align:right;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent);
+  mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent)}
+.stream .ln{transition:filter .22s linear,opacity .22s linear;position:relative;white-space:nowrap;overflow:hidden;
+  color:#8FC4E8;font-family:Consolas,monospace;font-size:9px;line-height:2.2;letter-spacing:.02em;
+  opacity:.5;text-shadow:none}
+.stream .ln .v{color:#BFE9FF;margin-left:6px}}}
+  100%{opacity:.55;transform:none;background:transparent}}
+.s-cap{position:absolute;top:2px;left:0;right:10px;text-align:right;
+  font-family:Consolas,monospace;font-size:8px;letter-spacing:.28em;color:#4E7FA8;opacity:.75}
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="g1">SYSTEM CORE / UNIT-00</div>
+  <div class="g2">系统运转</div>
+  <div class="g3"></div>
+  <button class="g-btn" id="gStart">点 击 启 动</button>
+  <div class="g-hint">启动后开启机械播报 · 建议戴耳机</div>
+</div>
+
+<div id="scene">
+  <div class="grid"></div>
+  <canvas id="cv"></canvas>
+  <div class="vignette"></div>
+
+  <div class="core">
+    <div class="glow"></div>
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+  </div>
+
+  <div class="side left">
+    <div class="sh">ANALYSIS PIPELINE / 05</div>
+    <div class="prow" id="p0"><i></i><span>简历解析</span><em>WAIT</em></div>
+    <div class="prow" id="p1"><i></i><span>岗位诊断</span><em>WAIT</em></div>
+    <div class="prow" id="p2"><i></i><span>属地合规</span><em>WAIT</em></div>
+    <div class="prow" id="p3"><i></i><span>双向匹配</span><em>WAIT</em></div>
+    <div class="prow" id="p4"><i></i><span>大模型</span><em>WAIT</em></div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <svg class="links" id="links"></svg>
+  <div class="node" id="n0" style="left:calc(50% + 210px);top:calc(48% - 190px)"><i></i><span>简历解析</span><b></b></div>
+  <div class="node" id="n1" style="left:calc(50% + 240px);top:calc(48% - 30px)"><i></i><span>岗位诊断</span><b></b></div>
+  <div class="node" id="n2" style="left:calc(50% + 200px);top:calc(48% + 160px)"><i></i><span>属地合规</span><b></b></div>
+  <div class="node" id="n3" style="left:calc(50% - 430px);top:calc(48% + 120px)"><i></i><span>双向匹配</span><b></b></div>
+  <div class="node" id="n4" style="left:calc(50% - 450px);top:calc(48% - 70px)"><i></i><span>大模型引擎</span><b></b></div>
+
+  <div class="hud">
+    <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+    <div class="tel tl">DOCUMENT <b>RES-2026-0417-01</b><br>PAGES <b>1</b><br>UPDATED <b>2026-11-02</b></div>
+    <div class="tel tr">ENGINE <b>RESUME-XRAY</b><br>LATENCY <b>1.2s</b><br>CONFIDENCE <b>0.86</b></div>
+  </div>
+  <div class="stream" id="stream">
+    <i class="tick b" style="left:22%"></i><i class="tick b" style="left:58%"></i><i class="tick b" style="left:92%"></i>
+    <div class="s-cap">LIVE FEED · 05</div>
+    <div class="s-body" id="sbody"></div>
+  </div>
+  <div class="tt" id="tt"></div>
+  <div class="bottom">
+    <div class="track"><i id="bar"></i></div>
+    <div class="meta"><span id="phase">INITIALIZING</span><b id="pct">0%</b></div>
+  </div>
+  <button class="back" id="back">返回</button>
+  <div class="flash" id="flash"></div>
+</div>
+
+<!-- 原始包缺少 assets/world-geo.js；未伪造该素材。 -->
+<!-- 原始包缺少 播报文案.js；未伪造该素材。 -->
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+/* ================= 可修改配置：改这里就行 ================= */
+const CFG = {
+  title: '简历透视',                       // 结束后的状态标题
+  lines: (window.BOOT_LINES||[
+    '简历透视，已启动。',
+    '正在读取简历信息，分析完成。'
+  ]),
+  rate: 1.45,                               // 语速，1.0 正常，越大越快
+  pitch: 1.0,                               // 音高，1.0 正常，低于 0.9 会发闷发诡异
+  stageHold: 220,                           // 每段停留毫秒，越小越快
+  voice: ''                                 // 留空用系统默认中文；也可填语音名关键字
+};
+/* ========================================================= */
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let playing=false, timers=[], raf=0;
+
+/* ---------- 声音 ---------- */
+let AC=null;
+function ac(){ if(!AC){const C=window.AudioContext||window.webkitAudioContext; if(!C)return null; AC=new C();} if(AC.state==='suspended')AC.resume(); return AC; }
+function tone(f,d,t,g,slide,delay){
+  const a=ac(); if(!a)return; const t0=a.currentTime+(delay||0);
+  const o=a.createOscillator(), ga=a.createGain(); o.type=t||'sine'; o.frequency.setValueAtTime(f,t0);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t0+d);
+  ga.gain.setValueAtTime(0,t0); ga.gain.linearRampToValueAtTime(g||.04,t0+.02); ga.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(ga); ga.connect(a.destination); o.start(t0); o.stop(t0+d+.03);
+}
+function hum(){
+  const a=ac(); if(!a) return;
+  const o=a.createOscillator(), g=a.createGain(); o.type='sawtooth'; o.frequency.value=48;
+  const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=180;
+  g.gain.setValueAtTime(0,a.currentTime); g.gain.linearRampToValueAtTime(.012,a.currentTime+1.2);
+  o.connect(lp); lp.connect(g); g.connect(a.destination); o.start();
+}
+function pickVoice(){
+  if(!window.speechSynthesis)return null;
+  const vs=speechSynthesis.getVoices()||[], re=/^zh|cmn|Chinese|中文|普通话/i;
+  const zh=vs.filter(v=>re.test(v.lang)||re.test(v.name));
+  if(!zh.length) return null;
+  const pref=[/Xiaoxiao.*Natural/i,/Yunxi.*Natural/i,/Natural/i,/Xiaoxiao/i,/Huihui/i];
+  for(const p of pref){ const v=zh.find(x=>p.test(x.name)); if(v) return v; }
+  return zh[0];
+}
+function smoothSpeech(text){
+  return String(text||'').replace(/\s+/g,' ').trim();
+}
+function speak(text){
+  if(!window.speechSynthesis) return;
+  try{speechSynthesis.cancel();}catch(e){}
+  const u=new SpeechSynthesisUtterance(smoothSpeech(text)), v=pickVoice();
+  if(v){u.voice=v;u.lang=v.lang;} else u.lang='zh-CN';
+  u.rate=CFG.rate; u.pitch=CFG.pitch; u.volume=1;
+  try{speechSynthesis.speak(u);}catch(e){}
+}
+
+/* ---------- 粒子球 ---------- */
+const cv=$('#cv'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1, pts=[], tick=0;
+function initCV(){
+  DPR=Math.min(devicePixelRatio||1,2);
+  W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  pts=[];
+  const N=460, GA=Math.PI*(3-Math.sqrt(5));
+  for(let i=0;i<N;i++){
+    const y=1-(i/(N-1))*2, r=Math.sqrt(1-y*y), th=GA*i;
+    pts.push({x:Math.cos(th)*r, y:y, z:Math.sin(th)*r, s:Math.random()*.7+.4});
+  }
+}
+
+const LAND=[
+ [[-35,18],[-28,16],[-15,12],[0,9],[5,10],[12,15],[22,25],[32,33],[35,20],[30,10],[12,-17],[0,-9],[-15,10],[-28,16],[-35,18]],
+ [[36,-10],[43,-9],[50,-5],[58,5],[65,15],[70,25],[72,40],[70,60],[65,80],[60,100],[55,120],[50,135],[45,140],[40,130],[35,120],[30,110],[25,100],[22,90],[20,80],[25,70],[30,60],[35,45],[36,30],[36,15],[36,-10]],
+ [[70,-160],[72,-140],[70,-120],[60,-100],[50,-90],[45,-80],[35,-75],[25,-80],[20,-90],[15,-100],[20,-110],[30,-120],[40,-125],[50,-130],[60,-140],[70,-160]],
+ [[12,-72],[5,-60],[0,-50],[-10,-40],[-20,-45],[-30,-55],[-40,-65],[-50,-70],[-45,-75],[-30,-72],[-20,-70],[-10,-75],[0,-78],[12,-72]],
+ [[-12,130],[-15,145],[-25,152],[-35,148],[-38,140],[-32,125],[-22,115],[-15,120],[-12,130]],
+ [[-70,-60],[-72,-20],[-70,20],[-72,60],[-70,100],[-72,140],[-70,180],[-78,180],[-80,140],[-78,100],[-80,60],[-78,20],[-80,-20],[-78,-60],[-70,-60]]
+];
+
+const RINGS=[];
+(function buildRings(){
+  if(!window.WORLD_GEOJSON) return;
+  window.WORLD_GEOJSON.features.forEach(f=>{
+    const g=f.geometry; if(!g) return;
+    const polys = g.type==='Polygon' ? [g.coordinates] : g.coordinates;
+    polys.forEach(poly=>poly.forEach(ring=>{
+      const arr=[];
+      for(let i=0;i<ring.length;i+=3){
+        const lon=ring[i][0]*Math.PI/180, lat=ring[i][1]*Math.PI/180;
+        arr.push([Math.cos(lat)*Math.cos(lon), Math.sin(lat), Math.cos(lat)*Math.sin(lon)]);
+      }
+      if(arr.length>1) RINGS.push(arr);
+    }));
+  });
+})();
+function draw(){
+  if(!W) return;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H*0.48, R=Math.min(W,H)*0.26;
+  tick+=0.004;
+  // 球面投影：只画正面
+  const ca=Math.cos(tick), sa=Math.sin(tick), ct=Math.cos(0.38), st=Math.sin(0.38);
+  const project=(v)=>{
+    const x=v[0]*ca - v[2]*sa, z1=v[0]*sa + v[2]*ca;
+    const y1=v[1]*ct - z1*st, z2=v[1]*st + z1*ct;
+    const sc=900/(900+z2*R*0.95);
+    return [cx+x*R*sc, cy+y1*R*sc, z2];
+  };
+  const strokeRing=(arr,color,w,glow)=>{
+    ctx.beginPath(); let started=false;
+    for(let i=0;i<arr.length;i++){
+      const q=project(arr[i]);
+      if(q[2]<=0.03){ started=false; continue; }
+      if(!started){ ctx.moveTo(q[0],q[1]); started=true; } else ctx.lineTo(q[0],q[1]);
+    }
+    ctx.strokeStyle=color; ctx.lineWidth=w;
+    ctx.stroke();
+  };
+  // 经纬网
+  for(let lat=-60;lat<=60;lat+=30){
+    const la=lat*Math.PI/180, row=[];
+    for(let lon=0;lon<=360;lon+=4){ const lo=lon*Math.PI/180;
+      row.push([Math.cos(la)*Math.cos(lo), Math.sin(la), Math.cos(la)*Math.sin(lo)]); }
+    strokeRing(row,'rgba(60,150,230,.22)',1,false);
+  }
+  for(let lon=0;lon<360;lon+=30){
+    const lo=lon*Math.PI/180, row=[];
+    for(let lat=-90;lat<=90;lat+=4){ const la=lat*Math.PI/180;
+      row.push([Math.cos(la)*Math.cos(lo), Math.sin(la), Math.cos(la)*Math.sin(lo)]); }
+    strokeRing(row,'rgba(60,150,230,.16)',1,false);
+  }
+  // 真实海岸线
+  ctx.lineJoin='round';
+  RINGS.forEach(ring=>strokeRing(ring,'rgba(120,210,255,.85)',1.1,false));
+  // 轨道亮点
+  for(let i=0;i<3;i++){
+    const ang=tick*(1.1+i*.35)+i*2.1;
+    const x=Math.cos(ang)*R*1.55, y=Math.sin(ang)*R*.5;
+    ctx.beginPath(); ctx.arc(cx+x,cy+y,2.2,0,Math.PI*2);
+    ctx.fillStyle='#FF4FD8'; ctx.shadowBlur=12; ctx.shadowColor='#FF4FD8'; ctx.fill(); ctx.shadowBlur=0;
+  }
+  const ng=ctx.createRadialGradient(cx,cy,0,cx,cy,R*0.62);
+  ng.addColorStop(0,'rgba(190,235,255,.30)');
+  ng.addColorStop(.45,'rgba(80,170,255,.12)');
+  ng.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=ng; ctx.beginPath(); ctx.arc(cx,cy,R*0.62,0,Math.PI*2); ctx.fill();
+  raf=requestAnimationFrame(draw);
+}
+
+/* ---------- 连线 ---------- */
+function buildLinks(){
+  const svg=$('#links'); svg.innerHTML='';
+  const cx=innerWidth/2, cy=innerHeight*0.48;
+  for(let i=0;i<5;i++){
+    const n=$('#n'+i), r=n.getBoundingClientRect();
+    const nx=r.left+r.width/2, ny=r.top+r.height/2;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const mx=(cx+nx)/2, my=(cy+ny)/2 + (ny>cy?40:-40);
+    const d=`M${cx} ${cy} Q ${mx} ${my} ${nx} ${ny}`;
+    p.setAttribute('d',d);
+    p.setAttribute('id','ln'+i); p.style.opacity='0';
+    svg.appendChild(p);
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('r','2.4'); c.setAttribute('fill','#6FE3FF');
+    c.setAttribute('id','pk'+i); c.style.opacity='0';
+    c.style.filter='drop-shadow(0 0 4px #6FE3FF)';
+    c.innerHTML=`<animateMotion dur="${2.2+i*0.15}s" repeatCount="indefinite" path="${d}"/>`;
+    svg.appendChild(c);
+  }
+}
+
+
+/* 五段流水线：节点、侧栏、输出、日志共用同一套事件 */
+const Q=new URLSearchParams(location.search);
+const DATA = Object.assign({doc:'RES-2026-0417-01', fields:34, constraints:18, rules:6, hits:11, evidence:8, conf:0.86}, window.__XRAY__||{});
+['fields','constraints','rules','hits','evidence'].forEach(k=>{ if(Q.get(k)) DATA[k]=parseInt(Q.get(k),10)||DATA[k]; });
+if(Q.get('doc')) DATA.doc=Q.get('doc');
+/* mode=job：视觉完全沿用原动画，只把「分析对象」换成岗位侧的数据与文案 */
+const IS_JOB = (new URLSearchParams(location.search).get('mode') || '') === 'job';
+if (IS_JOB) {
+  DATA.fields = 12; DATA.constraints = 7; DATA.rules = 6; DATA.hits = 9; DATA.evidence = 5; DATA.conf = 0.91;
+  var _d = (new URLSearchParams(location.search).get('doc') || '2026-0011').replace(/^JOB-/i, '').toUpperCase();
+  DATA.doc = 'JOB-' + _d.slice(0, 20);
+}
+const STAGES=[
+  { n:'简历解析', out:String(DATA.fields), log:'resume.parse  '+DATA.fields+' fields  OK' },
+  { n:'岗位诊断', out:String(DATA.constraints), log:'jd.constraints  '+DATA.constraints+'  OK' },
+  { n:'属地合规', out:String(DATA.rules),  log:'culture.DZ  '+DATA.rules+' rules  OK' },
+  { n:'双向匹配', out:String(DATA.hits), log:'align  '+DATA.hits+' hit / 1 gap' },
+  { n:'大模型',   out:String(DATA.evidence),  log:'llm  '+DATA.evidence+' evidence  conf '+DATA.conf }
+];
+if (IS_JOB) {
+  STAGES.length = 0;
+  STAGES.push(
+    { n:'岗位画像', out:String(DATA.fields),      log:'job.profile  '+DATA.fields+' fields  OK' },
+    { n:'职责解析', out:String(DATA.constraints), log:'job.duties  '+DATA.constraints+' items  OK' },
+    { n:'硬性要求', out:String(DATA.rules),       log:'job.gates  '+DATA.rules+' rules  OK' },
+    { n:'合规校验', out:String(DATA.hits),        log:'compliance  '+DATA.hits+' checks  OK' },
+    { n:'建议生成', out:String(DATA.evidence),    log:'plan  '+DATA.evidence+' suggestions  conf '+DATA.conf }
+  );
+  function applyJobLabels() {
+    var labels = ['岗位画像','职责解析','硬性要求','合规校验','建议生成'];
+    labels.forEach(function (s, i) {
+      var el = document.getElementById('n' + i);
+      if (el) { var sp = el.querySelector('span'); if (sp) sp.textContent = s; }
+      var row = document.getElementById('p' + i);
+      if (row) { var sp2 = row.querySelector('span'); if (sp2) sp2.textContent = s; }
+    });
+    var tl = document.querySelector('.hud .tel.tl');
+    if (tl) tl.innerHTML = '<b>' + DATA.doc + '</b><br>STAGE <b>1</b><br>UPDATED <b>2026-11-09</b>';
+    var tr = document.querySelector('.hud .tel.tr');
+    if (tr) tr.innerHTML = 'ENGINE <b>JOB-XRAY</b><br>LATENCY <b>1.2s</b><br>CONFIDENCE <b>' + DATA.conf + '</b>';
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyJobLabels);
+  else applyJobLabels();
+  setTimeout(applyJobLabels, 60);
+}
+
+function addLog(t){
+  const box=$('#log'); if(!box) return;
+  const d=document.createElement('div');
+  const n=new Date();
+  const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  d.innerHTML='<b>['+ts+']</b> '+t;
+  box.appendChild(d);
+  while(box.childElementCount>5) box.removeChild(box.firstChild);
+}
+const FILL=['parse.field 0x3F  ok','packet 128b','link.node 04  12ms','cache hit','rule.check  ok','token 24b','queue 03','hash a7f2'];
+let feeder=null;
+function feather(){
+  const box=$('#sbody'); if(!box) return;
+  const r=box.getBoundingClientRect(); if(!r.height) return;
+  const cy=r.top+r.height/2, half=r.height/2;
+  for(const el of box.children){
+    const b=el.getBoundingClientRect();
+    const d=Math.abs((b.top+b.height/2)-cy)/half;
+    const k=Math.max(0,Math.min(1,(d-0.38)/0.62));
+    el.style.filter = k>0.03 ? 'blur('+(k*2.6).toFixed(2)+'px)' : 'none';
+    el.style.opacity = String((0.92-k*0.62).toFixed(3));
+  }
+}
+function feedStart(){
+  const box=$('#sbody'); if(!box) return;
+  clearInterval(feeder);
+  feeder=setInterval(()=>{
+    if(!playing) return;
+    const d=document.createElement('div');
+    d.className='ln fill new';
+    d.innerHTML='<span class="k">'+FILL[(Math.random()*FILL.length)|0]+'</span><span class="v">'+String((Math.random()*90+10)|0)+'</span>';
+    box.appendChild(d);
+    if(box.childElementCount>40) box.removeChild(box.firstElementChild);
+    box.scrollTop=box.scrollHeight;
+    feather();
+  }, 55);
+}
+const LINES = IS_JOB ? [
+  '读取岗位 · '+DATA.fields+' 项字段',
+  '解析职责 · '+DATA.constraints+' 条要求',
+  '校验合规 · '+DATA.rules+' 条规则',
+  '薪资生活 · '+DATA.hits+' 项比对',
+  '生成建议 · '+DATA.evidence+' 条'
+] : [
+  '读取简历 · '+DATA.fields+' 项字段',
+  '解析岗位 · '+DATA.constraints+' 条条件',
+  '校验属地 · '+DATA.rules+' 条规则',
+  '双向比对 · '+DATA.hits+' 项命中',
+  '生成建议 · '+DATA.evidence+' 条证据'
+];
+let typer=null;
+function typeLine(text){
+  const box=$('#tt'); if(!box) return;
+  [...box.children].forEach(el=>el.classList.remove('cur'));
+  const ln=document.createElement('div'); ln.className='ln cur';
+  box.appendChild(ln);
+  requestAnimationFrame(()=>ln.classList.add('on'));
+  while(box.childElementCount>2){
+    const f=box.firstElementChild;
+    f.classList.remove('on'); f.style.opacity='0';
+    setTimeout(()=>f.remove(),460);
+    break;
+  }
+  let i=0; clearInterval(typer);
+  typer=setInterval(()=>{
+    ln.textContent=text.slice(0,++i);
+    if(i>=text.length){ clearInterval(typer); ln.classList.remove('cur'); }
+  }, 12);
+}
+function stageDone(i){
+  const p=$('#p'+i); if(p){ p.classList.add('on'); p.querySelector('em').textContent='OK'; }
+
+  const pk=document.querySelector('#pk'+i); if(pk) pk.style.opacity='1';
+  const o=$('#o'+i); if(o){ o.classList.add('on'); o.querySelector('b').textContent=STAGES[i].out; }
+  addLog(STAGES[i].log);
+}
+/* ---------- 数值 ---------- */
+let up=0;
+function telemetry(){}
+function setBar(p){ $('#bar').style.width=p+'%'; $('#pct').textContent=Math.round(p)+'%'; }
+function prog(to,dur){
+  const from=parseFloat($('#bar').style.width)||0, t0=performance.now();
+  (function step(t){ if(!playing)return; const k=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-k,3);
+    setBar(from+(to-from)*e); if(k<1) requestAnimationFrame(step); })(t0);
+}
+
+async function run(){
+  if(playing) return;
+  playing=true;
+  $('#gate').classList.add('off');
+  $('#scene').classList.add('on');
+  initCV(); cancelAnimationFrame(raf); draw(); buildLinks();
+  $$('.node').forEach(n=>{ n.classList.remove('on'); n.querySelector('b').textContent='STANDBY'; });
+   
+  setBar(0); $('#phase').textContent='INITIALIZING';
+  ac(); hum(); tone(48,2.4,'sawtooth',.04,90); feedStart(); setTimeout(()=>{ const st=document.querySelector('.stream'); if(st) st.style.opacity='1'; }, 260);
+  setTimeout(()=>{ speak(CFG.lines.map(function(t){return t.replace('{fields}',DATA.fields);}).join('')); }, 260);
+
+  await sleep(280);
+  $('#phase').textContent='CORE IGNITION';
+  tone(120,.5,'sine',.06,40);
+  prog(22,900);
+
+  await sleep(420);
+  $('#phase').textContent='LINKING MODULES';
+  try{
+  for(let i=0;i<5;i++){
+    await sleep(120);
+    typeLine(LINES[i]);
+    tone(760+i*60,.06,'square',.02);
+    await sleep(380);
+    const n=$('#n'+i); if(n){ n.classList.add('on'); const b=n.querySelector('b'); if(b) b.textContent=''; }
+    const ln=$('#ln'+i); if(ln) ln.style.opacity='.9';
+    prog(22+(i+1)*10, 260);
+    stageDone(i);
+  }
+  }catch(err){ console.error('boot stage error', err); }
+  await sleep(300);
+
+  $('#phase').textContent='RUNNING';
+  prog(100,900);
+  tone(300,1.2,'sine',.04,600);
+  
+  
+
+  // 保持运转，不结束
+  await sleep(600);
+  tone(392,.6,'sine',.03); tone(523,.6,'sine',.025,0,.1);
+  $('#flash').style.transition='opacity .2s'; $('#flash').style.opacity=.25;
+  await sleep(220);
+  $('#flash').style.transition='opacity .8s'; $('#flash').style.opacity=0;
+  try { if(window.parent && window.parent !== window) window.parent.postMessage({ type:'hp:boot-done' }, '*'); } catch(e) {}
+  // 循环保留：不淡出，一直转
+}
+
+$('#gStart').onclick=()=>{ run(); };
+$('#back').onclick=()=>{ playing=false; cancelAnimationFrame(raf); location.reload(); };
+telemetry();
+addEventListener('resize',()=>{ initCV(); buildLinks(); });
+(function init(){ if(location.search.includes('auto')) run(); })();
+</script>
+</body>
+</html>

@@ -1,1688 +1,844 @@
 <!DOCTYPE html>
-
 <html lang="zh-CN" data-theme="dark">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>智能简历匹配 · 登录</title>
-
+<title>海外用工派遣平台 · 登录</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 18V9l4 3 4-5 4 5 4-3v9z' fill='%234d8dff'/%3E%3C/svg%3E">
-
 <style>
-
 /* ==================================================================
-
  * 设计令牌：三套主题（dark 深空 / light 明亮 / mono 极简）
-
  * 与 app.html 保持一致
-
  * ================================================================== */
-
 :root,
-
 html[data-theme="dark"],
-
 html[data-theme="premium"],
-
 html[data-theme="tech"]{
-
   --bg:#020a12;
-
   --bg-grad:radial-gradient(1000px 680px at 12% 42%, rgba(2,132,199,.30), transparent 64%),
-
             radial-gradient(700px 520px at 84% 92%, rgba(56,189,248,.16), transparent 62%);
-
   --surface:rgba(6,14,24,.90);
-
   --surface-solid:#061a26;
-
   --surface-2:rgba(10,24,38,.72);
-
   --field:rgba(56,189,248,.05);
-
   --text:#eaf7ff; --text-2:#9db2cb; --text-3:#7a8da6;
-
   --primary:#38bdf8; --primary-2:#7dd3fc; --primary-strong:#0ea5e9;
-
   --primary-weak:rgba(56,189,248,.14);
-
   --accent:#7dd3fc; --accent-weak:rgba(125,211,252,.14);
-
   --danger:#f87171; --success:#4ade80; --warning:#f0b429;
-
   --border:rgba(56,189,248,.22); --border-2:rgba(56,189,248,.38);
-
   --grid:rgba(56,189,248,.07);
-
   --glow1:rgba(56,189,248,.22); --glow2:rgba(125,211,252,.14);
-
   --shadow:0 24px 70px rgba(0,0,0,.55);
-
   --radius:18px;
-
   --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
-
   /* 轨道星轨专用 */
-
   --orb1:rgba(56,189,248,.28); --orb2:rgba(14,165,233,.32);
-
   --orb3:rgba(125,211,252,.20);
-
   --sat1:#38bdf8; --sat2:#7dd3fc; --sat-glow:rgba(56,189,248,.55);
-
   --core-dot:#e0f2fe; --core-ring:rgba(125,211,252,.55);
-
   --core-ring2:rgba(56,189,248,.16); --core-rim:rgba(56,189,248,.14);
-
 }
-
 html[data-theme="light"]{
-
   --bg:#F4F7FC;
-
   --bg-grad:radial-gradient(900px 620px at 22% 8%, rgba(37,99,235,.10), transparent 62%),
-
             radial-gradient(700px 520px at 88% 96%, rgba(13,148,136,.08), transparent 60%);
-
   --surface:#FFFFFF;
-
   --surface-solid:#FFFFFF;
-
   --surface-2:#F0F4FA;
-
   --field:#F7FAFE;
-
   --text:#16233B; --text-2:#3E4E66; --text-3:#6B7A90;
-
   --primary:#2563EB; --primary-2:#0D9488; --primary-strong:#1D4FD7;
-
   --primary-weak:#E8F0FE;
-
   --accent:#0D9488; --accent-weak:#E0F4F1;
-
   --danger:#B91C1C; --success:#15803D; --warning:#A16207;
-
   --border:#E1E8F2; --border-2:#CBD8EA;
-
   --grid:rgba(37,99,235,.17);
-
   --glow1:rgba(37,99,235,.13); --glow2:rgba(13,148,136,.09);
-
   --shadow:0 20px 50px rgba(22,35,59,.10);
-
   --radius:18px;
-
   --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
-
   /* L1 蓝图工程专用 */
-
   --bp-fine:rgba(37,99,235,.17); --bp-coarse:rgba(37,99,235,.28);
-
   --bp-mark:#2563EB; --bp-ring1:rgba(37,99,235,.26);
-
   --bp-ring2:rgba(37,99,235,.40); --bp-ring3:rgba(13,148,136,.55);
-
   --bp-coredot:rgba(37,99,235,.22);
-
 }
-
 html[data-theme="mono"]{
-
   --bg:#FAFAFA;
-
   --bg-grad:linear-gradient(#FAFAFA,#FAFAFA);
-
   --surface:#FFFFFF;
-
   --surface-solid:#FFFFFF;
-
   --surface-2:#F5F5F5;
-
   --field:#F7F7F7;
-
   --text:#111111; --text-2:#525252; --text-3:#8A8A8A;
-
   --primary:#000000; --primary-2:#404040; --primary-strong:#1A1A1A;
-
   --primary-weak:#F0F0F0;
-
   --accent:#525252; --accent-weak:#F5F5F5;
-
   --danger:#1A1A1A; --success:#3F3F3F; --warning:#525252;
-
   --border:#E5E5E5; --border-2:#D4D4D4;
-
   --grid:transparent;
-
   --glow1:transparent; --glow2:transparent;
-
   --shadow:0 4px 16px rgba(0,0,0,.08);
-
   --radius:18px;
-
   --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
-
 }
-
-
 
 *{box-sizing:border-box;margin:0;padding:0}
-
 html,body{height:100%}
-
 body{
-
   font-family:var(--font); color:var(--text);
-
   background-color:var(--bg); background-image:var(--bg-grad);
-
   overflow:hidden;
-
 }
 
-
-
 /* ==================================================================
-
  * 开机动画（风格 B · 简约）—— 覆盖层，约 2.2 秒后自动淡出
-
  * ================================================================== */
-
 #bootSplash{
-
   position:fixed; inset:0; z-index:9999;
-
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-
   background-color:var(--bg); background-image:var(--bg-grad);
-
   transition:opacity .7s cubic-bezier(.16,1,.3,1), visibility 0s linear .7s;
-
 }
-
 #bootSplash.out{ opacity:0; visibility:hidden; pointer-events:none; }
-
 #bootSplash .logo{
-
   width:88px; height:88px; border-radius:22px;
-
   background:linear-gradient(135deg,var(--primary),var(--primary-2));
-
   display:grid; place-items:center;
-
   box-shadow:0 16px 46px var(--glow1);
-
   animation:logoPop .95s cubic-bezier(.34,1.56,.64,1) both;
-
 }
-
 #bootSplash .logo svg{ width:44px; height:44px; stroke:#fff; fill:none; stroke-width:1.8; }
-
 @keyframes logoPop{ 0%{opacity:0;transform:scale(.5)} 60%{transform:scale(1.07)} 100%{opacity:1;transform:scale(1)} }
-
 #bootSplash .bname{
-
   margin-top:26px; font-size:23px; font-weight:800;
-
   letter-spacing:6px; color:var(--text);
-
   animation:lettersIn .9s .15s both;
-
 }
-
 @keyframes lettersIn{ from{opacity:0;letter-spacing:20px} to{opacity:1;letter-spacing:6px} }
-
 #bootSplash .underline{
-
   margin-top:14px; height:3px; width:0; border-radius:2px;
-
   background:linear-gradient(90deg,var(--primary),var(--primary-2));
-
   animation:lineGrow .8s .5s both;
-
 }
-
 @keyframes lineGrow{ to{width:118px} }
-
 #bootSplash .btag{
-
   margin-top:16px; font-size:12px; color:var(--text-3);
-
   letter-spacing:1.2px; animation:fadeUp .55s .75s both;
-
 }
-
 @keyframes fadeUp{ from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-
 #bootSplash .skip{
-
   position:absolute; bottom:34px; font-size:11.5px; color:var(--text-3);
-
   letter-spacing:.5px; opacity:0; animation:fadeUp .5s 1.3s both;
-
 }
-
-
 
 /* ==================================================================
-
  * 主布局：左品牌区 / 右登录区（方案一）
-
  * ================================================================== */
-
 .wrap{ display:grid; grid-template-columns:1fr 520px; height:100%; position:relative; z-index:1 }
 
-
-
 /* ---------- 左：品牌（多层背景） ---------- */
-
 .brandside{
-
   position:relative; padding:64px 56px; display:flex; flex-direction:column; justify-content:center;
-
   overflow:hidden; isolation:isolate;
-
 }
-
 /* ① 底层光晕：深色最淡，浅色最柔 */
-
 .brandside::before{
-
   content:""; position:absolute; inset:-25%; z-index:-4;
-
   background:
-
     radial-gradient(820px 560px at 14% 44%, var(--glow1), transparent 64%),
-
     radial-gradient(680px 500px at 92% 106%, var(--glow2), transparent 62%);
-
   pointer-events:none;
-
 }
-
 /* ② 网格：深色不做网格（改由星轨承担），浅色画蓝图透视网格，极简画淡灰网格 */
-
 .brandside::after{
-
   content:""; position:absolute; inset:-25%; z-index:-3;
-
   pointer-events:none;
-
 }
-
 html[data-theme="light"] .brandside::after{
-
   background-image:linear-gradient(var(--bp-fine) 1px, transparent 1px),
-
                    linear-gradient(90deg, var(--bp-fine) 1px, transparent 1px);
-
   background-size:44px 44px;
-
   -webkit-mask-image:radial-gradient(780px 580px at 30% 44%, #000, transparent 78%);
-
   mask-image:radial-gradient(780px 580px at 30% 44%, #000, transparent 78%);
-
   transform:perspective(700px) rotateX(58deg) translateY(-6%);
-
 }
-
 html[data-theme="light"] .brandside .bp-coarse{
-
   position:absolute; inset:-25%; z-index:-3; pointer-events:none;
-
   background-image:linear-gradient(var(--bp-coarse) 1px, transparent 1px),
-
                    linear-gradient(90deg, var(--bp-coarse) 1px, transparent 1px);
-
   background-size:220px 220px;
-
   -webkit-mask-image:radial-gradient(780px 580px at 30% 44%, #000, transparent 76%);
-
   mask-image:radial-gradient(780px 580px at 30% 44%, #000, transparent 76%);
-
   transform:perspective(700px) rotateX(58deg) translateY(-6%);
-
 }
-
 html[data-theme="mono"] .brandside::after{
-
   background-image:linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px),
-
                    linear-gradient(90deg, rgba(0,0,0,.035) 1px, transparent 1px);
-
   background-size:24px 24px;
-
   -webkit-mask-image:radial-gradient(680px 540px at 28% 44%, #000, transparent 78%);
-
   mask-image:radial-gradient(680px 540px at 28% 44%, #000, transparent 78%);
-
 }
-
-
 
 /* ③ 深色：轨道星轨（4 条不同倾角的椭圆 + 2 颗卫星 + 8 个星点） */
-
 .brandside .orbits{
-
   position:absolute; right:-150px; top:50%; transform:translateY(-50%);
-
   width:720px; height:720px; z-index:-2; pointer-events:none; display:none;
-
 }
-
 html[data-theme="dark"] .brandside .orbits,
-
 html[data-theme="premium"] .brandside .orbits,
-
 html[data-theme="tech"] .brandside .orbits{ display:block }
-
 .brandside .orbits .o{
-
   position:absolute; inset:0; border-radius:50%; border:1px solid var(--orb1);
-
 }
-
 .brandside .orbits .o1{ transform:rotate(-20deg) scaleY(.38) }
-
 .brandside .orbits .o2{ transform:rotate(34deg) scaleY(.46); border-color:var(--orb2) }
-
 .brandside .orbits .o3{ transform:rotate(82deg) scaleY(.32); border-color:var(--orb1); opacity:.6 }
-
 .brandside .orbits .o4{ transform:rotate(-56deg) scaleY(.54); border-color:var(--orb3); opacity:.55 }
-
 .brandside .orbits .ring1,
-
 .brandside .orbits .ring2{ position:absolute; inset:0 }
-
 .brandside .orbits .ring1{ animation:orbA 22s linear infinite }
-
 .brandside .orbits .ring2{ animation:orbB 30s linear infinite }
-
 @keyframes orbA{ from{transform:rotate(-20deg) scaleY(.38)} to{transform:rotate(340deg) scaleY(.38)} }
-
 @keyframes orbB{ from{transform:rotate(34deg) scaleY(.46)} to{transform:rotate(-326deg) scaleY(.46)} }
-
 .brandside .orbits .sat{
-
   position:absolute; top:-3px; left:50%; margin-left:-3px; width:6px; height:6px;
-
   border-radius:50%; background:var(--sat1);
-
   box-shadow:0 0 12px var(--sat1), 0 0 26px var(--sat-glow);
-
 }
-
 .brandside .orbits .ring2 .sat{ background:var(--sat2); box-shadow:0 0 12px var(--sat2), 0 0 26px var(--sat-glow) }
 
-
-
 /* ④ 深色：中心原点 + 只呼不吸的扩散环 */
-
 .brandside .orbit-core{
-
   position:absolute; right:200px; top:50%; width:0; height:0;
-
   z-index:-1; pointer-events:none; display:none;
-
 }
-
 html[data-theme="dark"] .brandside .orbit-core,
-
 html[data-theme="premium"] .brandside .orbit-core,
-
 html[data-theme="tech"] .brandside .orbit-core{ display:block }
-
 /* 中心光点 */
-
 .brandside .orbit-core .dot{
-
   position:absolute; left:-3px; top:-3px; width:6px; height:6px; border-radius:50%;
-
   background:var(--core-dot);
-
   box-shadow:0 0 9px var(--sat2), 0 0 22px var(--sat-glow);
-
 }
-
 /* 主环：只呼不吸（B 版呼吸环砍掉「吸」那半）44px，1px 细线 */
-
 .brandside .orbit-core .wave{
-
   position:absolute; left:-22px; top:-22px; width:44px; height:44px; border-radius:50%;
-
   border:1px solid var(--core-ring);
-
   animation:coreOutBreath 2s ease-out infinite;
-
 }
-
 @keyframes coreOutBreath{
-
   0%  { transform:scale(.75); opacity:.9 }
-
   85% { transform:scale(1.3); opacity:.28 }
-
   100%{ transform:scale(1.35); opacity:0 }
-
 }
-
 /* 120px 极淡远环，静态 */
-
 .brandside .orbit-core .ring-far{
-
   position:absolute; left:-60px; top:-60px; width:120px; height:120px; border-radius:50%;
-
   border:1px solid var(--core-ring2);
-
 }
-
-
 
 /* ⑤ 浅色：装饰环（L1 三环旋转徽标） */
-
 .brandside .deco-rings{
-
   position:absolute; right:8%; top:50%; transform:translateY(-50%);
-
   width:340px; height:340px; z-index:-1; pointer-events:none; opacity:1; display:none;
-
 }
-
 html[data-theme="light"] .brandside .deco-rings{ display:block }
-
 .brandside .deco-rings i{
-
   position:absolute; inset:0; border-radius:50%;
-
   border:1px solid var(--bp-ring1);
-
 }
-
 .brandside .deco-rings i:nth-child(2){ inset:16%; border-style:dashed; border-color:var(--bp-ring2); animation:ringSpin 24s linear infinite }
-
 .brandside .deco-rings i:nth-child(3){ inset:34%; border-color:var(--bp-ring3); animation:ringSpin 16s linear infinite reverse }
-
 .brandside .deco-rings i:nth-child(4){
-
   inset:44%; border:none; background:radial-gradient(circle, var(--bp-coredot), transparent 70%);
-
   animation:corePulse 5s ease-in-out infinite;
-
 }
-
 @keyframes ringSpin{ to{ transform:rotate(360deg) } }
-
 @keyframes corePulse{ 0%,100%{transform:scale(1);opacity:.85} 50%{transform:scale(1.14);opacity:1} }
 
-
-
 /* ⑥ 四角标记（浅色 L1 的实线角标 / 深色的发光角括号） */
-
 .brandside .corner{
-
   position:absolute; width:80px; height:80px; z-index:-1; pointer-events:none; display:none;
-
 }
-
 .brandside .corner::before,
-
 .brandside .corner::after{ content:""; position:absolute; background:var(--bp-mark) }
-
 .brandside .corner::before{ width:100%; height:2px }
-
 .brandside .corner::after{ width:2px; height:100% }
-
 .brandside .corner.c1{ top:26px; left:26px }
-
 .brandside .corner.c1::before{ top:0; left:0 }
-
 .brandside .corner.c1::after{ top:0; left:0 }
-
 .brandside .corner.c2{ bottom:26px; right:26px }
-
 .brandside .corner.c2::before{ bottom:0; right:0 }
-
 .brandside .corner.c2::after{ bottom:0; right:0 }
-
 html[data-theme="light"] .brandside .corner{ display:block }
 
-
-
 /* ⑦ 细颗粒噪点，避免大面积纯色发闷 */
-
 .brandside .noise{
-
   position:absolute; inset:0; z-index:-1; pointer-events:none; opacity:.35; mix-blend-mode:overlay;
-
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
-
 }
-
 .brandside > *{ position:relative; z-index:1 }
-
 html[data-theme="mono"] .brandside .deco-rings,
-
 html[data-theme="mono"] .brandside .noise,
-
 html[data-theme="mono"] .brandside .corner,
-
 html[data-theme="light"] .brandside .noise{ display:none }
 
-
-
 .brand{ display:flex; align-items:center; gap:16px; margin-bottom:54px }
-
 .brand .logo{
-
   width:56px; height:56px; border-radius:16px;
-
   background:linear-gradient(135deg,var(--primary),var(--primary-2));
-
   display:grid; place-items:center;
-
   box-shadow:0 12px 36px var(--glow1);
-
 }
-
 .brand .logo svg{ width:28px; height:28px; stroke:#fff; fill:none; stroke-width:1.9 }
-
 .brand .bname{ font-size:19px; font-weight:800; letter-spacing:.3px }
-
 .brand .ben{ font-size:10.5px; color:var(--text-3); letter-spacing:2.2px; margin-top:3px }
 
-
-
 .slogan{ font-size:42px; font-weight:800; line-height:1.26; letter-spacing:-.5px; margin-bottom:20px }
-
 .slogan em{
-
   font-style:normal;
-
   background:linear-gradient(135deg,var(--primary),var(--primary-2));
-
   -webkit-background-clip:text; background-clip:text; color:transparent;
-
 }
-
 html[data-theme="mono"] .slogan em{ background:none; color:var(--text); -webkit-text-fill-color:currentColor }
-
-
 
 .desc{ font-size:14px; color:var(--text-2); line-height:1.9; max-width:450px; margin-bottom:44px }
 
-
-
 .stats{ display:flex; gap:46px; flex-wrap:wrap }
-
 .stat .n{
-
   font-size:31px; font-weight:800;
-
   background:linear-gradient(135deg,var(--primary),var(--primary-2));
-
   -webkit-background-clip:text; background-clip:text; color:transparent;
-
 }
-
 html[data-theme="mono"] .stat .n{ background:none; color:var(--text); -webkit-text-fill-color:currentColor }
-
 .stat .l{ font-size:11.5px; color:var(--text-3); margin-top:4px; letter-spacing:.4px }
 
-
-
 /* ---------- 右：登录 ---------- */
-
 .loginside{
-
   background:var(--surface-solid);
-
   border-left:1px solid var(--border);
-
   display:flex; align-items:center; justify-content:center;
-
   padding:48px 44px; overflow-y:auto;
-
 }
-
 html[data-theme="dark"] .loginside,
-
 html[data-theme="premium"] .loginside,
-
 html[data-theme="tech"] .loginside{
-
   background:linear-gradient(180deg, rgba(13,21,36,.92), rgba(9,15,28,.96));
-
   backdrop-filter:blur(14px);
-
 }
-
 html[data-theme="mono"] .loginside{ background:#FFFFFF }
-
-
 
 .card{ width:100%; max-width:430px }
 
-
-
 .ttl{ font-size:24px; font-weight:800; margin-bottom:6px }
-
 .sub{ font-size:12.5px; color:var(--text-3); margin-bottom:26px }
 
-
-
 /* Tab */
-
 .tabs{
-
   display:flex; gap:4px; background:var(--surface-2);
-
   padding:4px; border-radius:12px; border:1px solid var(--border);
-
   margin-bottom:22px;
-
 }
-
 .tabs button{
-
   flex:1; padding:9px; border:none; background:transparent; color:var(--text-3);
-
   font-size:13px; border-radius:9px; cursor:pointer; font-family:inherit;
-
   font-weight:500; transition:.18s;
-
 }
-
 .tabs button.active{
-
   background:linear-gradient(135deg,var(--primary),var(--primary-2));
-
   color:#fff; font-weight:650;
-
 }
-
 html[data-theme="mono"] .tabs button.active{ background:var(--primary); color:#fff }
 
-
-
 /* 表单 */
-
 .field{ margin-bottom:15px }
-
 .field label{ display:block; font-size:12px; color:var(--text-2); margin-bottom:7px; font-weight:500 }
-
 .field input{
-
   width:100%; padding:13px 15px; border-radius:11px;
-
   border:1px solid var(--border); background:var(--field);
-
   color:var(--text); font-size:13.5px; outline:none;
-
   transition:.2s; font-family:inherit;
-
 }
-
 .field input:focus{
-
   border-color:var(--primary);
-
   box-shadow:0 0 0 3px var(--primary-weak);
-
 }
-
 .field input::placeholder{ color:var(--text-3) }
-
 .field-row{ display:flex; gap:10px }
-
 .field-row input{ flex:1 }
-
 .field-row .code-btn{
-
   padding:0 16px; border-radius:11px; border:1px solid var(--border);
-
   background:var(--surface-2); color:var(--text-2); font-size:12.5px;
-
   cursor:pointer; white-space:nowrap; font-family:inherit; transition:.18s;
-
 }
-
 .field-row .code-btn:hover:not(:disabled){ border-color:var(--primary); color:var(--primary) }
-
 .field-row .code-btn:disabled{ opacity:.55; cursor:not-allowed }
 
-
-
 .go{
-
   width:100%; padding:14px; border:none; border-radius:12px;
-
   background:linear-gradient(135deg,var(--primary),var(--primary-2));
-
   color:#fff; font-size:14.5px; font-weight:700; cursor:pointer;
-
   margin-top:6px; box-shadow:0 8px 28px var(--glow1);
-
   letter-spacing:.5px; transition:.2s; font-family:inherit;
-
 }
-
 .go:hover:not(:disabled){ filter:brightness(1.08); transform:translateY(-1px) }
-
 .go:disabled{ opacity:.6; cursor:not-allowed; transform:none }
-
 html[data-theme="mono"] .go{ background:var(--primary) }
 
-
-
 #err{ color:var(--danger); font-size:12px; min-height:18px; margin-top:10px }
-
 #devCodeBox{
-
   font-size:12px; color:var(--text-2); background:var(--surface-2);
-
   border:1px dashed var(--border-2); border-radius:10px; padding:9px 12px; margin-bottom:12px;
-
 }
-
 #devCodeBox.hide{ display:none }
-
 #devCodeBox code{ color:var(--primary); font-weight:700 }
 
-
-
 .divider{
-
   display:flex; align-items:center; gap:12px; margin:24px 0 16px;
-
   font-size:11.5px; color:var(--text-3);
-
 }
-
 .divider::before, .divider::after{ content:""; flex:1; height:1px; background:var(--border) }
 
-
-
 /* 演示账号卡片 */
-
 .acct{
-
   display:flex; align-items:center; gap:12px;
-
   padding:11px 13px; border-radius:12px;
-
   border:1px solid var(--border); background:var(--field);
-
   cursor:pointer; margin-bottom:9px; transition:.18s;
-
   width:100%; text-align:left; font-family:inherit;
-
 }
-
 .acct:hover{
-
   border-color:var(--primary);
-
   background:var(--primary-weak);
-
   transform:translateX(3px);
-
 }
-
 .acct:disabled{ opacity:.6; cursor:not-allowed; transform:none }
-
 .acct .av{
-
   width:38px; height:38px; border-radius:11px; flex:0 0 38px;
-
   display:grid; place-items:center; font-size:14px; font-weight:800; color:#fff;
-
 }
-
 .acct .av.p{ background:linear-gradient(135deg,#4d8dff,#2563eb) }
-
 .acct .av.c{ background:linear-gradient(135deg,#0d9488,#059669) }
-
 .acct .av.a{ background:linear-gradient(135deg,#f59e0b,#d97706) }
-
 .acct .av.n{ background:linear-gradient(135deg,#8b5cf6,#6d28d9) }
-
 .acct .av.d{ background:linear-gradient(135deg,#22d3ee,#0284c7) }
-
 html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color:var(--text) !important; border:1px solid var(--border-2) }
-
 .acct .info{ flex:1; min-width:0 }
-
 .acct .nm{ font-size:13px; font-weight:650; color:var(--text) }
-
 .acct .tg{
-
   font-size:11px; color:var(--text-3); margin-top:2px;
-
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-
 }
-
 .acct .arrow{ color:var(--text-3); font-size:15px; transition:.18s }
-
 .acct:hover .arrow{ color:var(--primary); transform:translateX(2px) }
 
-
-
 /* 连接状态 */
-
 #connTip{ font-size:11.5px; margin-top:14px; text-align:center; color:var(--text-3) }
 
-
-
 /* 底部链接 */
-
 .foot{
-
   margin-top:22px; padding-top:16px; border-top:1px solid var(--border);
-
   display:flex; align-items:center; justify-content:space-between;
-
   font-size:11.5px; color:var(--text-3);
-
 }
-
 .foot a{ color:var(--text-3); text-decoration:none; transition:.18s }
-
 .foot a:hover{ color:var(--primary) }
 
-
-
 /* 主题切换按钮 */
-
 .theme-sw{
-
   position:fixed; top:22px; right:24px; z-index:50;
-
   display:flex; gap:3px; padding:4px;
-
   background:var(--surface); border:1px solid var(--border);
-
   border-radius:11px; backdrop-filter:blur(10px);
-
   box-shadow:var(--shadow);
-
 }
-
 .theme-sw button{
-
   width:30px; height:30px; border:none; background:transparent;
-
   border-radius:8px; cursor:pointer; font-size:14px;
-
   display:grid; place-items:center; transition:.18s; color:var(--text-2);
-
 }
-
 .theme-sw button:hover{ background:var(--surface-2) }
-
 .theme-sw button.on{ background:var(--primary-weak); box-shadow:inset 0 0 0 1px var(--primary) }
 
-
-
 /* 响应式 */
-
 @media (max-width:1080px){
-
   .wrap{ grid-template-columns:1fr }
-
   .brandside{ display:none }
-
   .loginside{ border-left:none; padding:40px 24px }
-
 }
-
 </style>
-
 </head>
-
 <body>
 
-
-
 <!-- ================= 开机动画（风格 B） ================= -->
-
 <div id="bootSplash">
-
   <div class="logo">
-
     <svg viewBox="0 0 24 24"><path d="M3 18V9l4 3 4-5 4 5 4-3v9z" stroke-linejoin="round"/><path d="M5 21h14" stroke-linecap="round"/></svg>
-
   </div>
-
-  <div class="bname">智能简历匹配</div>
-
+  <div class="bname">环球派遣</div>
   <div class="underline"></div>
-
   <div class="btag" id="bootTag">海外用工 · 全周期数字化平台</div>
-
   <div class="skip">按任意键跳过</div>
-
 </div>
-
-
 
 <!-- ================= 主题切换 ================= -->
-
 <div class="theme-sw" id="themeSw">
-
   <button data-t="dark" title="深空主题">🌙</button>
-
   <button data-t="light" title="明亮主题">☀️</button>
-
   <button data-t="mono" title="极简主题">◐</button>
-
 </div>
 
-
-
 <!-- ================= 主界面 ================= -->
-
 <div class="wrap">
-
   <!-- 左：品牌 -->
-
   <div class="brandside">
-
     <!-- 背景装饰层 -->
-
     <div class="noise"></div>
-
     <div class="bp-coarse"></div>
-
     <!-- 深色：轨道星轨 + 中心原点 -->
-
     <div class="orbits">
-
       <div class="o o1"></div><div class="o o2"></div><div class="o o3"></div><div class="o o4"></div>
-
       <div class="ring1"><span class="sat"></span></div>
-
       <div class="ring2"><span class="sat"></span></div>
-
     </div>
-
     <div class="orbit-core">
-
       <div class="ring-far"></div>
-
       <div class="wave"></div>
-
       <div class="dot"></div>
-
     </div>
-
     <!-- 浅色：三环旋转徽标 + 四角标记 -->
-
     <div class="deco-rings"><i></i><i></i><i></i><i></i></div>
-
     <div class="corner c1"></div><div class="corner c2"></div>
 
-
-
     <div class="brand">
-
       <div class="logo">
-
         <svg viewBox="0 0 24 24"><path d="M3 18V9l4 3 4-5 4 5 4-3v9z" stroke-linejoin="round"/><path d="M5 21h14" stroke-linecap="round"/></svg>
-
       </div>
-
       <div>
-
         <div class="bname" id="brandName">海外用工派遣平台</div>
-
         <div class="ben">GLOBAL DISPATCH · FULL LIFECYCLE</div>
-
       </div>
-
     </div>
-
-
 
     <div class="slogan" id="slogan">让出海用工<br><em>每一步都看得见</em></div>
 
-
-
     <div class="desc" id="sloganDesc">
-
       投递 → 资质 → 面试 → 签约 → 签证 → 出境 → 在岗 → 回流。三份合同一致性校验、签证材料预审、证照到期扫描，全部由可复核的智能体与规则引擎完成。
-
     </div>
-
-
 
     <div class="stats">
-
       <div class="stat"><div class="n">6</div><div class="l" id="st1">已部署智能体</div></div>
-
       <div class="stat"><div class="n">3</div><div class="l" id="st2">身份协同</div></div>
-
       <div class="stat"><div class="n">14</div><div class="l" id="st3">业务工具</div></div>
-
       <div class="stat"><div class="n">100%</div><div class="l" id="st4">全程留痕</div></div>
-
     </div>
-
   </div>
 
-
-
   <!-- 右：登录 -->
-
   <div class="loginside">
-
     <div class="card">
-
       <div class="ttl" id="loginTtl">欢迎回来</div>
-
       <div class="sub" id="loginSub">登录后可查看你的项目进度与待办</div>
 
-
-
       <div class="tabs" id="tabs">
-
         <button data-tab="password" class="active" id="tabPwd">密码登录</button>
-
         <button data-tab="code" id="tabCode">验证码登录</button>
-
       </div>
 
-
-
       <!-- 密码登录 -->
-
       <form id="pwdForm" autocomplete="on">
-
         <div class="field">
-
           <label id="lbPhone">手机号</label>
-
           <input id="phone" type="tel" inputmode="numeric" placeholder="请输入 11 位手机号" autocomplete="username">
-
         </div>
-
         <div class="field">
-
           <label id="lbPwd">密码</label>
-
           <input id="password" type="password" placeholder="请输入登录密码" autocomplete="current-password">
-
         </div>
-
         <button class="go" type="submit" id="pwdSubmit">登 录</button>
-
         <div id="err"></div>
-
       </form>
-
-
 
       <!-- 验证码登录 -->
-
       <form id="codeForm" class="hide" autocomplete="on" style="display:none">
-
         <div class="field">
-
           <label id="lbPhone2">手机号</label>
-
           <input id="codePhone" type="tel" inputmode="numeric" placeholder="请输入 11 位手机号" autocomplete="username">
-
         </div>
-
         <div id="devCodeBox" class="hide"></div>
-
         <div class="field">
-
           <label id="lbCode">验证码</label>
-
           <div class="field-row">
-
             <input id="code" type="text" inputmode="numeric" placeholder="请输入验证码" autocomplete="one-time-code">
-
             <button type="button" class="code-btn" id="sendCode">获取验证码</button>
-
           </div>
-
         </div>
-
         <button class="go" type="submit" id="codeSubmit">登 录</button>
-
         <div id="errCode" style="color:var(--danger);font-size:12px;min-height:18px;margin-top:10px"></div>
-
       </form>
-
-
 
       <div class="divider" id="demoDivider">或使用演示账号直接进入</div>
 
-
-
       <!-- 演示账号（可切三端）+ 三个业务端账号 -->
-
       <button class="acct" data-role="persona" data-acct="demo-switch">
-
         <div class="av d">演</div>
-
         <div class="info">
-
           <div class="nm" id="acct0n">演示账号 · 三端可切换</div>
-
           <div class="tg" id="acct0t">可在应聘者 / 企业 / 保障部之间切换</div>
-
         </div>
-
         <div class="arrow">→</div>
-
       </button>
-
-
 
       <button class="acct" data-role="persona" data-acct="persona-zhangwei">
-
         <div class="av p">张</div>
-
         <div class="info">
-
           <div class="nm" id="acct1n">张伟 · 应聘者</div>
-
           <div class="tg" id="acct1t">玻璃压机操作工 · 签证办理中</div>
-
         </div>
-
         <div class="arrow">→</div>
-
       </button>
-
-
 
       <button class="acct" data-role="company" data-acct="company-hr">
-
         <div class="av c">HR</div>
-
         <div class="info">
-
           <div class="nm" id="acct2n">海外项目 HR · 企业</div>
-
           <div class="tg" id="acct2t">3 个在办项目 · 29 名派遣人员</div>
-
         </div>
-
         <div class="arrow">→</div>
-
       </button>
-
-
 
       <button class="acct" data-role="assurance" data-acct="assurance-seat">
-
         <div class="av a">保</div>
-
         <div class="info">
-
           <div class="nm" id="acct3n">保障部坐席 · 保障部</div>
-
           <div class="tg" id="acct3t">2 起待处置风险 · 9 条待复核</div>
-
         </div>
-
         <div class="arrow">→</div>
-
       </button>
-
-
 
       <div id="connTip">正在检测后端连接…</div>
 
-
-
       <div class="foot">
-
-        <a href="index.html" id="footLinks">智能简历匹配</a>
-
+        <a href="agents.html" id="footLinks">智能体运行台</a>
         <span id="demoNote">演示环境 · 数据为示例</span>
-
       </div>
-
     </div>
-
   </div>
-
 </div>
 
-
-
-<script src="js/hp-config.js"></script>
-
 <script src="js/hp-bridge.js"></script>
-
 <script>
-
 (function(){
-
   'use strict';
-
   var $ = function(s, r){ return (r||document).querySelector(s); };
 
-
-
   /* ============ 主题 ============ */
-
   var THEMES = ['dark','light','mono'];
-
   var ALIAS = { tech:'dark', premium:'dark' };
-
   function normTheme(t){
-
     var v = ALIAS[t] || t;
-
     return THEMES.indexOf(v) >= 0 ? v : 'dark';
-
   }
-
   function applyTheme(t){
-
     var v = normTheme(t);
-
     document.documentElement.setAttribute('data-theme', v);
-
     try{ localStorage.setItem('hp-theme', v); }catch(e){}
-
     var sw = $('#themeSw');
-
     if(sw) Array.prototype.forEach.call(sw.children, function(b){
-
       b.classList.toggle('on', b.dataset.t === v);
-
     });
-
   }
-
   try{
-
     var q=(location.search.match(/[?&]theme=([a-z]+)/)||[])[1];
-
     var saved = q || localStorage.getItem('hp-theme') || 'dark';
-
     applyTheme(saved);
-
   }catch(e){ applyTheme('dark'); }
 
-
-
   $('#themeSw').addEventListener('click', function(e){
-
     var b = e.target.closest('[data-t]');
-
     if(b) applyTheme(b.dataset.t);
-
   });
-
-
 
   /* ============ 开机动画 ============ */
-
   (function bootSplash(){
-
     var el = $('#bootSplash');
-
     if(!el) return;
-
     var done = false;
-
     function end(){
-
       if(done) return;
-
       done = true;
-
       el.classList.add('out');
-
       setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 800);
-
     }
-
     /* 表内已播放过就不再播（同一会话） */
-
     var played = false;
-
     try{ played = sessionStorage.getItem('hp-boot-played') === '1'; }catch(e){}
-
     if(played){ el.parentNode.removeChild(el); return; }
-
     try{ sessionStorage.setItem('hp-boot-played','1'); }catch(e){}
-
     setTimeout(end, 2200);
-
     window.addEventListener('keydown', end, { once:true });
-
     window.addEventListener('mousedown', end, { once:true });
-
   })();
 
-
-
   /* ============ 登录逻辑（沿用原实现） ============ */
-
   function text(id, val){ var el = $('#'+id); if(el) el.textContent = val; }
-
   function tip(t, color){
-
     var el = $('#connTip');
-
     if(!el) return;
-
     el.textContent = t;
-
     el.style.color = color || 'var(--text-3)';
-
   }
-
   function err(t){ var el = $('#err'); if(el) el.textContent = t || ''; }
-
   function setBusy(b){
-
     ['#pwdSubmit','#codeSubmit','#sendCode'].forEach(function(s){
-
       var el = $(s); if(el) el.disabled = b;
-
     });
-
   }
-
   function goApp(role){
-
     try{ localStorage.setItem('hp-role', role); }catch(e){}
-
-    location.href = 'index.html#/' + role;
-
+    location.href = 'app.html#/' + role;
   }
-
-
 
   /* Tab 切换 */
-
   $('#tabs').addEventListener('click', function(e){
-
     var btn = e.target.closest('[data-tab]');
-
     if(!btn) return;
-
     Array.prototype.forEach.call(this.children, function(b){ b.classList.toggle('active', b === btn); });
-
     var isPwd = btn.dataset.tab === 'password';
-
     $('#pwdForm').style.display = isPwd ? '' : 'none';
-
     $('#codeForm').style.display = isPwd ? 'none' : '';
-
     err('');
-
   });
-
-
 
   /* 密码登录 */
-
   $('#pwdForm').addEventListener('submit', function(e){
-
     e.preventDefault();
-
     err('');
-
     var phone = $('#phone').value.trim();
-
     var password = $('#password').value;
-
     if(!/^\d{6,15}$/.test(phone)){ err('请输入正确的手机号'); return; }
-
     if(password.length < 6){ err('请输入登录密码'); return; }
-
     if(!window.HPBridge || !window.HPBridge.isOnline()){
-
       err('后端未连接，无法密码登录；可使用下方演示账号进入');
-
       return;
-
     }
-
     setBusy(true);
-
     tip('正在登录…', 'var(--accent)');
-
     window.HPBridge.loginPassword(phone, password).then(function(r){
-
       goApp(r.user.role);
-
     }).catch(function(ex){
-
       setBusy(false);
-
       err(ex && ex.message ? ex.message : '登录失败');
-
       tip('已连接后端', 'var(--text-3)');
-
     });
-
   });
-
-
 
   /* 验证码 */
-
   $('#sendCode').addEventListener('click', function(){
-
     err('');
-
     var phone = $('#codePhone').value.trim();
-
     if(!/^\d{6,15}$/.test(phone)){ err('请输入正确的手机号'); return; }
-
     if(!window.HPBridge || !window.HPBridge.isOnline()){ err('后端未连接'); return; }
-
     var self = this;
-
     self.disabled = true;
-
     window.HPBridge.requestCode(phone).then(function(r){
-
       var box = $('#devCodeBox');
-
       if(box){
-
         box.classList.remove('hide');
-
         box.innerHTML = r.devCode
-
           ? '开发模式验证码：<code>' + r.devCode + '</code>（5 分钟内有效）'
-
           : '验证码已发送，请查收短信';
-
         if(r.devCode) $('#code').value = r.devCode;
-
       }
-
       var left = 60;
-
       self.textContent = left + 's';
-
       var timer = setInterval(function(){
-
         left -= 1;
-
         if(left <= 0){ clearInterval(timer); self.disabled = false; self.textContent = '获取验证码'; }
-
         else self.textContent = left + 's';
-
       }, 1000);
-
     }).catch(function(ex){
-
       self.disabled = false;
-
       err(ex && ex.message ? ex.message : '发送失败');
-
     });
-
   });
-
-
 
   $('#codeForm').addEventListener('submit', function(e){
-
     e.preventDefault();
-
     err('');
-
     var phone = $('#codePhone').value.trim();
-
     var code = $('#code').value.trim();
-
     if(!/^\d{6,15}$/.test(phone)){ err('请输入正确的手机号'); return; }
-
     if(!/^\d{4,6}$/.test(code)){ err('请输入验证码'); return; }
-
     setBusy(true);
-
     window.HPBridge.loginCode(phone, code).then(function(r){
-
       goApp(r.user.role);
-
     }).catch(function(ex){
-
       setBusy(false);
-
       err(ex && ex.message ? ex.message : '登录失败');
-
     });
-
   });
-
-
 
   /* 演示账号 */
-
   Array.prototype.forEach.call(document.querySelectorAll('.acct'), function(b){
-
     b.addEventListener('click', function(){
-
       err('');
-
       var role = b.dataset.role;
-
       var accountId = b.dataset.acct || '';
-
       if(!window.HPBridge || !window.HPBridge.isOnline()){ goApp(role); return; }
-
       b.disabled = true;
-
       var nm = b.querySelector('.nm') ? b.querySelector('.nm').textContent : role;
-
       tip('正在以「' + nm + '」身份进入…', 'var(--accent)');
-
       window.HPBridge.login(role, { accountId: accountId }).then(function(){
-
         goApp(role);
-
       }).catch(function(ex){
-
         b.disabled = false;
-
         err(ex && ex.message ? ex.message : '演示登录失败');
-
       });
-
     });
-
   });
 
-
-
   /* 初始化 */
-
   if(window.HP_READY && window.HP_READY.then){
-
     window.HP_READY.then(init);
-
   } else {
-
     setTimeout(init, 300);
-
   }
-
   function init(){
-
     if(window.HPBridge && window.HPBridge.isOnline()){
-
       tip('● 已连接后端 · 支持密码 / 验证码登录', 'var(--success)');
-
       refreshAccounts();
-
     } else {
-
       tip('○ 未检测到后端服务 · 当前为离线演示模式');
-
     }
-
   }
-
-
 
   /* 用后端实时概况刷新卡片（项目数、待办数等） */
-
   function refreshAccounts(){
-
     if(!window.HPBridge || !window.HPBridge.demoAccounts) return;
-
     window.HPBridge.demoAccounts().then(function(res){
-
       var list = (res && res.accounts) || [];
-
       if(!list.length) return;
-
       list.forEach(function(a){
-
         var card = document.querySelector('.acct[data-acct="' + a.id + '"]');
-
         if(!card) return;
-
         var nmEl = card.querySelector('.nm');
-
         var tgEl = card.querySelector('.tg');
-
         if(nmEl && a.title) nmEl.textContent = a.title;
-
         if(tgEl && a.subtitle) tgEl.textContent = a.subtitle;
-
         if(tgEl && a.tags && a.tags.length) tgEl.title = a.tags.join(' · ');
-
         if(!a.available){
-
           card.disabled = true;
-
           if(tgEl) tgEl.textContent = '该账号尚未初始化';
-
         }
-
       });
-
     }).catch(function(){});
-
   }
-
 })();
-
 </script>
-
-<a id="platform-home-return" href="../../platform.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none;box-shadow:0 4px 20px #0005">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
+<a id="platform-home-return" href="../../index.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
 </body>
-
 </html>

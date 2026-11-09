@@ -502,7 +502,7 @@
     wrap.id = 'hpJobAI';
     wrap.innerHTML = '<div class="hp-aiflow-bar"><i class="dot"></i><b id="hjaTitle">岗位 AI 诊断 · 开机动画</b><span>基于当前保存版本</span><div class="acts"><button id="hjaVoice" type="button">语音 ON</button><button id="hjaSkip" type="button">跳过开机 →</button><button id="hjaClose" type="button">关闭 ×</button></div></div>' +
       '<div class="hp-aiflow-loading" id="hjaLoading">正在启动诊断引擎…</div>' +
-      '<iframe class="hp-aiflow-frame" id="hjaFrame" allow="autoplay; fullscreen" src="demo/boot-embed.html?auto&mode=job"></iframe>' +
+      '<iframe class="hp-aiflow-frame" id="hjaFrame" allow="autoplay; fullscreen" src="demo/boot-embed.html?auto&mode=job&doc=' + encodeURIComponent(String((job && job.id) || 'JOB-2026-0011')) + '"></iframe>' +
       '<div class="hp-ai-data" id="hjaData" hidden></div>';
     document.body.appendChild(wrap);
     document.documentElement.style.overflow = 'hidden';

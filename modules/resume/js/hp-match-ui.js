@@ -2745,9 +2745,23 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
         if (back) back.style.display = '';
       });
       panel.querySelector('#mtDResume').addEventListener('click', function () {
-        /* 从分析结果页进入：返回时应该回到这个分析结果，而不是列表 */
+        /* 从分析结果页进入：返回时重绘分析结果页并恢复这个人的详情面板。
+           注意：简历页会整体替换 root，直接调用 showDetail 会把面板插到简历页里，
+           看起来像“返回没反应”，所以先重绘榜单、等它渲染完再打开详情。 */
         openResume(root, candidateId, jobId, {
-          onBack: function () { showDetail(root, candidateId, jobId, summary); }
+          onBack: function () {
+            try { rank(root, { jobId: jobId }); } catch (e) { company(root); return; }
+            var tries = 0;
+            var timer = setInterval(function () {
+              tries++;
+              if (root.querySelector('#mtRankList')) {
+                clearInterval(timer);
+                showDetail(root, candidateId, jobId, summary);
+              } else if (tries > 40) {
+                clearInterval(timer);
+              }
+            }, 150);
+          }
         });
       });
       panel.querySelector('#mtDInterview').addEventListener('click', function () {
