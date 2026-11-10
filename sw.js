@@ -12,7 +12,7 @@ self.addEventListener('fetch',event=>{
  if(req.method!=='GET'||url.origin!==ROOT.origin||!ALLOWED.has(url.pathname))return;
  if(req.headers.has('Authorization'))return;
  if(url.search&&url.pathname!==new URL('pwa.js',ROOT).pathname&&url.pathname!==new URL('index.html',ROOT).pathname&&url.pathname!==ROOT.pathname)return;
- const key=new URL(url.pathname,ROOT.origin).href;
+ const key=url.pathname===ROOT.pathname?new URL('index.html',ROOT).href:new URL(url.pathname,ROOT.origin).href;
  event.respondWith(fetch(req,{cache:'no-cache'}).then(async response=>{
   if(response.ok&&response.type!=='opaque'){try{const cache=await caches.open(CACHE);await cache.put(key,response.clone());}catch(e){/* Cache storage may be full; keep the successful network response. */}}
   return response;
