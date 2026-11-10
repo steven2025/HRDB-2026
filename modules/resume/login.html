@@ -629,8 +629,9 @@ html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color
   </div>
 </div>
 
-<script src="js/hp-config.js?v=20261109-login3"></script>
-<script src="js/hp-bridge.js?v=20261109-login2"></script>
+<script src="js/hp-config.js?v=20261110-cache1"></script>
+<script src="js/hp-read-cache.js?v=20261110-cache1"></script>
+<script src="js/hp-bridge.js?v=20261110-cache1"></script>
 <script>
 (function(){
   'use strict';
@@ -793,11 +794,7 @@ html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color
       b.disabled = true;
       var nm = b.querySelector('.nm') ? b.querySelector('.nm').textContent : role;
       tip('正在以「' + nm + '」身份进入…', 'var(--accent)');
-      Promise.resolve(window.HP_READY).catch(function(){ return null; }).then(function(){
-        return window.HPBridge.isOnline() ? true : window.HPBridge.reconnect();
-      }).then(function(){
-        return window.HPBridge.login(role, { accountId: accountId });
-      }).then(function(){
+      Promise.resolve(window.HP_READY).catch(function(){return null;}).then(function(){return window.HPBridge.isOnline()?true:window.HPBridge.reconnect();}).then(function(){return window.HPBridge.login(role,{accountId:accountId});}).then(function(){
         goApp(role);
       }).catch(function(ex){
         b.disabled = false;
@@ -817,7 +814,7 @@ html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color
       tip('● 已连接后端 · 支持密码 / 验证码登录', 'var(--success)');
       refreshAccounts();
     } else {
-      tip('○ 暂未连接云服务 · 点击演示账号将重新连接');
+      tip('○ 暂未连接云服务 · 点击演示账号将重试');
     }
   }
 
@@ -844,6 +841,6 @@ html[data-theme="mono"] .acct .av{ background:var(--surface-2) !important; color
   }
 })();
 </script>
-<a id="platform-home-return" href="../../index.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
+<a id="platform-home-return" href="../../platform.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
 </body>
 </html>

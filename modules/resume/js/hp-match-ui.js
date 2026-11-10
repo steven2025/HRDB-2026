@@ -331,6 +331,60 @@
      'applied' → 投递管理：只看主动投递过简历的候选人
      'talent'  → 候选人发现：看人才库中未投递的候选人（主动挖掘）
      省略      → 全部（兼容旧调用） */
+  /* ---------------- 面试 / offer 表单（企业侧） ---------------- */
+  function localInputValue(days, hour) {
+    var d = new Date(); d.setDate(d.getDate() + (days || 1)); d.setHours(hour == null ? 10 : hour, 0, 0, 0);
+    var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + 'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+  }
+  function openInterviewDialog(opt) {
+    opt = opt || {};
+    if (!window.HP || !HP.modal) return;
+    var body = '<div style="display:grid;gap:10px;font-size:12px">' +
+      '<div class="t-muted">候选人：<b style="color:var(--text)">' + esc(opt.candidateName || '') + '</b>' + (opt.jobTitle ? ' · ' + esc(opt.jobTitle) : '') + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">面试时间</label><input id="ivAt" type="datetime-local" value="' + localInputValue(1, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">面试形式</label><select id="ivMode" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"><option>视频面试</option><option>现场面试</option><option>电话面试</option></select></div></div>' +
+      '<div><label class="t-muted">面试地点 / 会议链接</label><input id="ivLocation" placeholder="如：Zoom 链接 / 阿尔及尔项目现场" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">面试官</label><input id="ivInterviewer" value="海外项目 HR" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">时长（分钟）</label><input id="ivDuration" type="number" value="45" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div><label class="t-muted">给候选人的备注</label><textarea id="ivNote" rows="2" placeholder="如：请提前 10 分钟上线，准备作品/证书" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>' +
+      '<div class="t-muted" style="font-size:11px;line-height:1.7">发出后候选人会收到通知，可以选择接受、申请改期或拒绝并填写理由。</div></div>';
+    HP.modal({ title: '邀面试', wide: true, body: body, actions: [
+      { text: '取消' },
+      { text: '发送邀约', primary: true, onClick: function (close) {
+        var at = (document.getElementById('ivAt') || {}).value || '';
+        var location = (document.getElementById('ivLocation') || {}).value || '';
+        if (!at) { window.HP.toast('请选择时间', '面试时间不能为空'); return; }
+        if (!location.trim()) { window.HP.toast('请填写地点', '视频面试可填会议链接'); return; }
+        var payload = { jobId: opt.jobId, at: at.replace('T', ' '), mode: (document.getElementById('ivMode') || {}).value || '视频面试', location: location.trim(), interviewer: (document.getElementById('ivInterviewer') || {}).value || '', duration: Number((document.getElementById('ivDuration') || {}).value || 45), note: (document.getElementById('ivNote') || {}).value || '' };
+        (call('company.invite', opt.candidateId, payload) || api('/api/company/candidates/' + encodeURIComponent(opt.candidateId) + '/interview', { method: 'POST', body: payload }))
+          .then(function () { close(); window.HP.toast('已发出面试邀约', '等待候选人确认 / 改期'); if (opt.onDone) opt.onDone(); })
+          .catch(function (e) { window.HP.toast('邀约失败', e.message); });
+      }}
+    ]});
+  }
+  function openOfferDialog(opt) {
+    opt = opt || {};
+    if (!window.HP || !HP.modal) return;
+    var suggested = opt.salary || (opt.candidate && opt.candidate.salaryExpect ? Math.round(Number(opt.candidate.salaryExpect) / 100) / 10 + 'K' : '');
+    var body = '<div style="display:grid;gap:10px;font-size:12px">' +
+      '<div class="t-muted">候选人：<b style="color:var(--text)">' + esc(opt.candidateName || '') + '</b>' + (opt.jobTitle ? ' · ' + esc(opt.jobTitle) : '') + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">offer 薪资</label><input id="ofSalary" value="' + esc(suggested) + '" placeholder="如：24,000 元/月" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">入职时间</label><input id="ofStart" type="date" value="' + localInputValue(30, 10).slice(0, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">合同周期（月）</label><input id="ofMonths" type="number" value="24" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">有效期至</label><input id="ofExpires" type="date" value="' + localInputValue(7, 10).slice(0, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div><label class="t-muted">福利 / 说明</label><input id="ofBenefits" placeholder="如：包食宿、往返机票、商业保险" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+      '<div><label class="t-muted">备注</label><textarea id="ofNote" rows="2" placeholder="给候选人的说明" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>' +
+      '<div class="t-muted" style="font-size:11px;line-height:1.7">发出后候选人可以接受、拒绝或提出薪资 / 入职时间协商。</div></div>';
+    HP.modal({ title: '发 offer', wide: true, body: body, actions: [
+      { text: '取消' },
+      { text: '发送 offer', primary: true, onClick: function (close) {
+        var salary = (document.getElementById('ofSalary') || {}).value || '';
+        if (!salary.trim()) { window.HP.toast('请填写薪资', 'offer 薪资不能为空'); return; }
+        var payload = { candidateId: opt.candidateId, salary: salary.trim(), startDate: (document.getElementById('ofStart') || {}).value || '', contractMonths: Number((document.getElementById('ofMonths') || {}).value || 24), benefits: (document.getElementById('ofBenefits') || {}).value || '', expiresAt: (document.getElementById('ofExpires') || {}).value || '', note: (document.getElementById('ofNote') || {}).value || '' };
+        (call('company.createOffer', opt.jobId, payload) || api('/api/company/jobs/' + encodeURIComponent(opt.jobId) + '/offers', { method: 'POST', body: payload }))
+          .then(function () { close(); window.HP.toast('offer 已发出', '等待候选人接受 / 协商'); if (opt.onDone) opt.onDone(); })
+          .catch(function (e) { window.HP.toast('发送失败', e.message); });
+      }}
+    ]});
+  }
+
   function company(root, opts) {
     if (!root) return;
     var scope = (opts && opts.scope) || 'all';
@@ -601,14 +655,7 @@
           var iv = e.target.closest('[data-interview]');
           if (iv) {
             e.stopPropagation();
-            iv.disabled = true; iv.textContent = L('发送中', 'Sending');
-            (call('company.invite', iv.dataset.interview, { jobId: jobSel.value }) ||
-              api('/api/company/candidates/' + encodeURIComponent(iv.dataset.interview) + '/interview', { method: 'POST', body: { jobId: jobSel.value, at: '待确认', mode: '视频面试' } }))
-              .then(function () {
-                iv.textContent = L('已邀约', 'Invited'); iv.classList.add('btn-p');
-                if (window.HPSound) window.HPSound.sfx('success');
-              })
-              .catch(function (err) { iv.textContent = L('失败', 'Failed'); iv.disabled = false; window.HP.toast(L('邀约失败', 'Invite failed'), err.message); });
+            openInterviewDialog({ candidateId: iv.dataset.interview, jobId: jobSel.value, candidateName: iv.dataset.name, jobTitle: (lastJob && lastJob.title) || '', onDone: function () { load(); } });
             return;
           }
           var ex = e.target.closest('[data-explain]');
@@ -640,17 +687,7 @@
       function bindOfferButtons() {
         Array.prototype.forEach.call(listEl.querySelectorAll('[data-offer]'), function (btn) {
           btn.addEventListener('click', function () {
-            var salary = prompt(L('offer 薪资（元/月）', 'Offer salary (CNY/month)'), '23500');
-            if (salary === null) return;
-            var startDate = prompt(L('预计到岗日期（YYYY-MM-DD）', 'Expected start date (YYYY-MM-DD)'), '2026-12-10') || null;
-            (call('company.createOffer', jobSel.value, { candidateId: btn.dataset.offer, salary: salary, startDate: startDate, note: '由 AI 匹配面板发起' }) ||
-              api('/api/company/jobs/' + encodeURIComponent(jobSel.value) + '/offers', { method: 'POST', body: { candidateId: btn.dataset.offer, salary: salary, startDate: startDate } }))
-              .then(function (res) {
-                window.HP.toast(L('offer 已发出', 'Offer sent'), (res.offer ? res.offer.candidateName : btn.dataset.name) + ' · ' + salary + ' 元/月');
-                if (window.HPSound) window.HPSound.sfx('success');
-                loadFunnel();
-              })
-              .catch(function (e) { window.HP.toast(L('发送失败', 'Send failed'), e.message); });
+            openOfferDialog({ candidateId: btn.dataset.offer, jobId: jobSel.value, candidateName: btn.dataset.name || '', jobTitle: (lastJob && lastJob.title) || '', onDone: function () { load(); } });
           });
         });
       }
@@ -704,7 +741,8 @@
       }
 
       root.querySelector('#mtWeights').addEventListener('click', function () {
-        openWeights('company', function () {
+        window.__hpWeightsJobId = jobSel.value;
+        openWeights('job', function () {
             load();
             // 重算回来后统计排名变动，给出明确反馈
             setTimeout(function () {
@@ -738,7 +776,7 @@
       }
       /* 进入分析页：传递选中名单。未选则传当前筛选结果的全部 */
       function goAnalyze(ids) {
-        var list = ids && ids.length ? ids : lastRenderRows.map(function (c) { return c.candidateId; });
+        var list = ids && ids.length ? ids : lastRenderRows.filter(function (c) { return scope !== 'applied' || c.applied; }).map(function (c) { return c.candidateId; });
         if (!list.length) { window.HP.toast(L('无法分析', 'Cannot analyze'), L('当前没有可分析的候选人', 'No candidates to analyze')); return; }
         window.HPS_CFG = {
           query: 'autorun=1&job=' + encodeURIComponent(jobSel.value) +
@@ -754,7 +792,7 @@
       });
 
       root.querySelector('#mtAnalyzeAll').addEventListener('click', function () {
-        var all = lastRenderRows.map(function (c) { return c.candidateId; });
+        var all = lastRenderRows.filter(function (c) { return scope !== 'applied' || c.applied; }).map(function (c) { return c.candidateId; });
         if (!all.length) { window.HP.toast(L('无法分析', 'Cannot analyze'), L('当前筛选结果为空', 'No rows in current filter')); return; }
         window.HP.toast(L('全部分析', 'Analyze all'), L('将对当前筛选出的 ', 'Will analyze ') + all.length + L(' 位候选人逐个分析', ' filtered candidates one by one'));
         goAnalyze(all);
@@ -1257,6 +1295,64 @@
     });
   }
 
+  /* ---------------- 候选人回应面试 / offer ---------------- */
+  function openInterviewResponse(iv, action, onDone) {
+    if (!window.HP || !HP.modal) return;
+    var title = action === 'accept' ? '接受面试邀约' : action === 'reschedule' ? '申请改期' : '拒绝面试';
+    var body = '<div style="display:grid;gap:10px;font-size:12px">' +
+      '<div class="t-muted">' + esc(iv.jobTitle || '') + ' · 原定 ' + esc(iv.at || '待确认') + ' · ' + esc(iv.mode || '') + '</div>';
+    if (action === 'reschedule') {
+      body += '<div><label class="t-muted">希望改到</label><input id="rvAt" type="datetime-local" value="' + localInputValue(2, 14) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+        '<div><label class="t-muted">希望地点 / 链接</label><input id="rvLoc" value="' + esc(iv.location || '') + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>';
+    }
+    if (action !== 'accept') {
+      body += '<div><label class="t-muted">' + (action === 'decline' ? '拒绝理由' : '改期原因') + '</label><textarea id="rvReason" rows="2" placeholder="请填写原因" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>';
+    } else {
+      body += '<div class="t-muted" style="line-height:1.7">确认接受后，企业会看到「已接受」。</div>';
+    }
+    body += '</div>';
+    HP.modal({ title: title, body: body, actions: [{ text: '取消' }, { text: action === 'accept' ? '确认接受' : action === 'reschedule' ? '提交改期' : '确认拒绝', primary: action !== 'decline', onClick: function (close) {
+      var payload = {};
+      if (action === 'reschedule') {
+        payload.proposedAt = ((document.getElementById('rvAt') || {}).value || '').replace('T', ' ');
+        payload.proposedLocation = (document.getElementById('rvLoc') || {}).value || '';
+        if (!payload.proposedAt) { window.HP.toast('请选择时间', '改期时间不能为空'); return; }
+      }
+      if (action !== 'accept') payload.reason = (document.getElementById('rvReason') || {}).value || '';
+      if (action === 'decline' && !payload.reason.trim()) { window.HP.toast('请填写理由', '拒绝面试需要说明原因'); return; }
+      (call('persona.respondInterview', iv.id, action, payload) || api('/api/persona/interviews/' + encodeURIComponent(iv.id) + '/' + action, { method: 'POST', body: payload }))
+        .then(function () { close(); window.HP.toast('已提交', action === 'accept' ? '面试已接受' : action === 'reschedule' ? '改期申请已发送' : '已拒绝面试'); if (onDone) onDone(); })
+        .catch(function (e) { window.HP.toast('提交失败', e.message); });
+    }}]});
+  }
+  function openOfferResponse(offer, action, onDone) {
+    if (!window.HP || !HP.modal) return;
+    var title = action === 'accept' ? '接受 offer' : action === 'decline' ? '拒绝 offer' : '协商 offer';
+    var body = '<div style="display:grid;gap:10px;font-size:12px">' +
+      '<div class="t-muted">' + esc(offer.jobTitle || '') + ' · 企业报价 <b style="color:var(--text)">' + esc(offer.salary || '—') + '</b>' + (offer.startDate ? ' · 入职 ' + esc(offer.startDate) : '') + '</div>';
+    if (action === 'negotiate') {
+      body += '<div><label class="t-muted">期望薪资</label><input id="roSalary" value="' + esc(offer.salary || '') + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+        '<div><label class="t-muted">期望入职时间</label><input id="roStart" type="date" value="' + esc(offer.startDate || '') + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>';
+    }
+    if (action !== 'accept') {
+      body += '<div><label class="t-muted">' + (action === 'decline' ? '拒绝理由' : '协商说明') + '</label><textarea id="roReason" rows="2" placeholder="请填写原因" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>';
+    }
+    body += '</div>';
+    HP.modal({ title: title, body: body, actions: [{ text: '取消' }, { text: action === 'accept' ? '确认接受' : action === 'decline' ? '确认拒绝' : '提交协商', primary: action !== 'decline', onClick: function (close) {
+      var payload = {};
+      if (action === 'negotiate') {
+        payload.counterSalary = (document.getElementById('roSalary') || {}).value || '';
+        payload.counterStartDate = (document.getElementById('roStart') || {}).value || '';
+      }
+      if (action !== 'accept') payload.reason = (document.getElementById('roReason') || {}).value || '';
+      if (action === 'decline' && !payload.reason.trim()) { window.HP.toast('请填写理由', '拒绝 offer 需要说明原因'); return; }
+      var fn = action === 'accept' ? 'persona.acceptOffer' : action === 'decline' ? 'persona.declineOffer' : 'persona.negotiateOffer';
+      (call(fn, offer.id, payload) || api('/api/persona/offers/' + encodeURIComponent(offer.id) + '/' + action, { method: 'POST', body: payload }))
+        .then(function () { close(); window.HP.toast('已提交', action === 'accept' ? 'offer 已接受' : action === 'decline' ? '已拒绝 offer' : '协商请求已发送'); if (onDone) onDone(); })
+        .catch(function (e) { window.HP.toast('提交失败', e.message); });
+    }}]});
+  }
+
   function discover(root) {
     if (!root) return;
     root.innerHTML = '<div class="mt-stage"><div class="mt-stage-in"><div class="mt-hero"><div class="t-muted">正在加载岗位…</div></div></div></div>';
@@ -1264,10 +1360,12 @@
     Promise.all([
       /* 岗位列表必须带 lang 参数，走 HTTP 接口（HPBridge 不支持语言参数） */
       (api('/api/persona/discover?lang=' + ((window.HPI18N && window.HPI18N.lang()) || 'zh'))),
-      (call('persona.offers') || api('/api/persona/offers')).catch(function () { return { offers: [] }; })
+      (call('persona.offers') || api('/api/persona/offers')).catch(function () { return { offers: [] }; }),
+      (call('persona.interviews') || api('/api/persona/interviews')).catch(function () { return { interviews: [] }; })
     ]).then(function (res) {
       var data = res[0] || {};
       var offers = (res[1] && res[1].offers) || [];
+      var interviews = (res[2] && res[2].interviews) || [];
       var jobs = data.jobs || [];
       var countries = data.countries || [];
       var scores = {};          // 只有分析后才有分数
@@ -1314,6 +1412,7 @@
 
       /* ---------- 顶部统计 + 录用通知 ---------- */
       var pending = offers.filter(function (o) { return o.status === '待接受'; });
+      var pendingIv = interviews.filter(function (iv) { return iv.status === '待确认'; });
       var favN = jobs.filter(function (j) { return j.favorite; }).length;
       var appN = jobs.filter(function (j) { return j.applied; }).length;
       heroEl.innerHTML =
@@ -1338,24 +1437,33 @@
             (I18.isEn() ? 'You have ' + pending.length + ' offer(s)' : '你有 ' + pending.length + ' 条录用通知') +
             '</b>' +
             '<div class="t-muted" style="font-size:12px;margin-top:3px">' + esc(pending[0].jobTitle) + ' · ' + esc(pending[0].salary) + '</div></div>' +
-            '<div style="display:flex;gap:8px"><button class="btn btn-p btn-sm" id="mtAcceptOffer">' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" id="mtAcceptOffer">' +
             (I18.isEn() ? 'Accept' : '接受') + '</button>' +
+            '<button class="btn btn-o btn-sm" id="mtNegotiateOffer">' + (I18.isEn() ? 'Negotiate' : '协商') + '</button>' +
             '<button class="btn btn-o btn-sm" id="mtDeclineOffer">' +
-            (I18.isEn() ? 'Later' : '再看看') + '</button></div></div>'
-          : '');
+            (I18.isEn() ? 'Decline' : '拒绝') + '</button></div></div>'
+          : '') +
+        (pendingIv.length
+          ? '<div class="mt-offer" style="display:block"><b>' + (I18.isEn() ? 'Interview invitations' : '面试邀约') + '</b>' +
+            pendingIv.map(function (iv) {
+              return '<div style="border-top:1px dashed var(--border);padding-top:8px;margin-top:8px">' +
+                '<div style="font-size:13px;font-weight:600">' + esc(iv.jobTitle || '') + '</div>' +
+                '<div class="t-muted" style="font-size:11.5px;margin-top:3px">' + esc(iv.at || '待确认') + ' · ' + esc(iv.mode || '') + (iv.location ? ' · ' + esc(iv.location) : '') + '</div>' +
+                '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:7px"><button class="btn btn-p btn-sm" data-iv-act="accept" data-iv-id="' + esc(iv.id) + '">接受</button><button class="btn btn-o btn-sm" data-iv-act="reschedule" data-iv-id="' + esc(iv.id) + '">申请改期</button><button class="btn btn-o btn-sm" data-iv-act="decline" data-iv-id="' + esc(iv.id) + '">拒绝</button></div></div>';
+            }).join('') + '</div>'
+          : '');;
 
       if (pending.length) {
-        root.querySelector('#mtAcceptOffer').addEventListener('click', function () {
-          (call('persona.acceptOffer', pending[0].id) || api('/api/persona/offers/' + encodeURIComponent(pending[0].id) + '/accept', { method: 'POST' }))
-            .then(function () { window.HP.toast('已接受', '录用通知已确认，可以去签合同了'); discover(root); })
-            .catch(function (e) { window.HP.toast('操作失败', e.message); });
-        });
-        root.querySelector('#mtDeclineOffer').addEventListener('click', function () {
-          (call('persona.declineOffer', pending[0].id) || api('/api/persona/offers/' + encodeURIComponent(pending[0].id) + '/decline', { method: 'POST' }))
-            .then(function () { window.HP.toast('已婉拒', '可以继续看看其他岗位'); discover(root); })
-            .catch(function (e) { window.HP.toast('操作失败', e.message); });
-        });
+        root.querySelector('#mtAcceptOffer').addEventListener('click', function () { openOfferResponse(pending[0], 'accept', function () { discover(root); }); });
+        root.querySelector('#mtNegotiateOffer').addEventListener('click', function () { openOfferResponse(pending[0], 'negotiate', function () { discover(root); }); });
+        root.querySelector('#mtDeclineOffer').addEventListener('click', function () { openOfferResponse(pending[0], 'decline', function () { discover(root); }); });
       }
+      root.querySelectorAll('[data-iv-act]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var iv = pendingIv.filter(function (x) { return x.id === b.dataset.ivId; })[0];
+          if (iv) openInterviewResponse(iv, b.dataset.ivAct, function () { discover(root); });
+        });
+      });
 
       /* ---------- 筛选器（更丰富） ---------- */
       filtersEl.innerHTML =
@@ -1961,9 +2069,10 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
   var W_LABEL = { skill: '技能', cert: '证书', salary: '薪资', location: '地点', exp: '经验', availability: '可用性' };
   var W_DEFAULT = { skill: 40, cert: 20, salary: 15, location: 10, exp: 10, availability: 5 };
 
-  function openWeights(role, onSaved) {
-    var url = role === 'company' ? '/api/company/weights' : '/api/persona/weights';
-    Promise.resolve(call(role === 'company' ? 'company.weights' : 'persona.weights') || api(url))
+  function openWeights(role, onSaved, jobId) {
+    jobId = jobId || window.__hpWeightsJobId || '';
+    var url = role === 'job' ? '/api/company/jobs/' + encodeURIComponent(jobId) + '/weights' : (role === 'company' ? '/api/company/weights' : '/api/persona/weights');
+    Promise.resolve(role === 'job' ? api(url) : (call(role === 'company' ? 'company.weights' : 'persona.weights') || api(url)))
       .catch(function () { return api(url); })
       .then(function (res) {
       res = res || {};
@@ -1977,9 +2086,9 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
       }).join('');
       window.HP.modal({
         /* 标题不再带括号说明（按需求去掉） */
-        title: role === 'company' ? '评分规则' : '我的偏好权重',
+        title: role === 'job' ? '岗位评分权重' : (role === 'company' ? '评分规则' : '我的偏好权重'),
         body: '<div class="mt-wbox">' + rows +
-          '<div class="t-muted" style="font-size:12px;margin-top:8px">权重会归一化到 100，默认值即原始评分（技能 40 / 证书 20 / 薪资 15 / 地点 10 / 经验 10 / 可用性 5）。</div></div>',
+          '<div class="t-muted" style="font-size:12px;margin-top:8px">' + (role === 'job' ? '只影响当前岗位的匹配分与排名；不改企业默认权重。' : '权重会归一化到 100，默认值即原始评分（技能 40 / 证书 20 / 薪资 15 / 地点 10 / 经验 10 / 可用性 5）。') + '</div></div>',
         actions: [
           { text: '取消' },
           { text: '恢复默认', onClick: function (close) {
@@ -1991,13 +2100,13 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
             document.querySelectorAll('.mt-wbox [data-wn]').forEach(function (num) {
               num.value = W_DEFAULT[num.dataset.wn];
             });
-            saveWeights(role, box, url, null, onSaved);
+            saveWeights(role, box, url, null, onSaved, jobId);
           } },
           { text: '保存', primary: true, onClick: function (close) {
             /* 保存：写入后保持弹窗打开，由用户自己关闭（按需求） */
             var box = {};
             document.querySelectorAll('.mt-wbox [data-w]').forEach(function (inp) { box[inp.dataset.w] = Number(inp.value); });
-            saveWeights(role, box, url, null, onSaved);
+            saveWeights(role, box, url, null, onSaved, jobId);
           } }
         ]
       });
@@ -2030,15 +2139,16 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
 
   /* 防重复提交：请求进行中时忽略后续点击 */
   var weightsBusy = false;
-  function saveWeights(role, box, url, close, onSaved) {
+  function saveWeights(role, box, url, close, onSaved, jobId) {
     if (weightsBusy) return;
     weightsBusy = true;
-    (call(role === 'company' ? 'company.saveWeights' : 'persona.saveWeights', { weights: box }) ||
+    ((role === 'job' ? null : call(role === 'company' ? 'company.saveWeights' : 'persona.saveWeights', { weights: box })) ||
       api(url, { method: 'PUT', body: { weights: box } }))
       .then(function (r) {
         /* close 可能为 null（按需求：保存后不自动关弹窗，由用户自己关） */
         if (typeof close === 'function') close();
-        window.HP.toast('已保存', '权重已更新，排名已按新权重重算');
+        window.HP.toast('已保存', role === 'job' ? '岗位权重已更新，当前岗位排名已重算' : '权重已更新，排名已按新权重重算');
+        if (role === 'company' || role === 'job') { try { document.dispatchEvent(new CustomEvent('hp:weights', { detail: { role: role, jobId: jobId, weights: r.weights || box } })); } catch (e2) {} }
         if (onSaved) onSaved(r.weights);
       })
       .catch(function (e) { window.HP.toast('保存失败', e.message); })
@@ -2373,17 +2483,10 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
         location.hash = '#/company/stage';
       });
       root.querySelector('#mtResInterview').addEventListener('click', function () {
-        (call('company.invite', candidateId, { jobId: jobId }) || api('/api/company/candidates/' + encodeURIComponent(candidateId) + '/interview', { method: 'POST', body: { jobId: jobId, at: '待确认', mode: '视频面试' } }))
-          .then(function () { window.HP.toast('已发出面试邀约', r.name + ' 会收到通知'); })
-          .catch(function (e) { window.HP.toast('邀约失败', e.message); });
+        openInterviewDialog({ candidateId: candidateId, jobId: jobId, candidateName: r.name || '', jobTitle: r.jobTitle || '', onDone: function () { window.HP.toast('已发出面试邀约', r.name + ' 待确认'); } });
       });
       root.querySelector('#mtResOffer').addEventListener('click', function () {
-        var salary = prompt('offer 薪资（元/月）', String(r.salaryExpect || 23000));
-        if (salary === null) return;
-        (call('company.createOffer', jobId, { candidateId: candidateId, salary: salary + ' 元/月', note: '简历详情页发起' }) ||
-          api('/api/company/jobs/' + encodeURIComponent(jobId) + '/offers', { method: 'POST', body: { candidateId: candidateId, salary: salary + ' 元/月' } }))
-          .then(function () { window.HP.toast('offer 已发出', r.name + ' · ' + salary + ' 元/月'); })
-          .catch(function (e) { window.HP.toast('发送失败', e.message); });
+        openOfferDialog({ candidateId: candidateId, jobId: jobId, candidateName: r.name || '', jobTitle: r.jobTitle || '', candidate: { salaryExpect: r.salaryExpect }, onDone: function () { window.HP.toast('offer 已发出', r.name + ' 待确认'); } });
       });
     }).catch(function (e) {
       root.innerHTML = '<div class="mt-stage"><div class="mt-stage-in"><div class="mt-hero">加载简历失败：' + esc(e.message) +
@@ -2411,6 +2514,14 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
       return (call('company.jobCandidates', jid) || api('/api/company/jobs/' + encodeURIComponent(jid) + '/candidates'))
         .then(function (res) {
           var list = ((res && res.list) || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+          /* 从分析页「查看结果」过来：只展示本次实际分析的候选人，而不是该岗位全量候选人。 */
+          var analyzed = (window.__hpFromStage && Array.isArray(window.HPS_ANALYZED_CANDS) && window.HPS_ANALYZED_CANDS.length)
+            ? window.HPS_ANALYZED_CANDS.slice() : null;
+          if (analyzed && analyzed.length) {
+            var aset = {};
+            analyzed.forEach(function (id) { aset[id] = true; });
+            list = list.filter(function (x) { return aset[x.candidateId]; });
+          }
           var job = res.job || jobs.filter(function (j) { return j.id === jid; })[0] || {};
 
           root.innerHTML = gradDefs() +
@@ -2419,7 +2530,7 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
                 '<div class="mt-sum-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:26px;height:26px"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>' +
                 '<div class="mt-hero-main">' +
                   '<div class="mt-hero-title">匹配分析结果 <span style="font-weight:400;font-size:12.5px;color:var(--text-2)">' + esc(job.title || '') + ' · ' + esc(job.country || '') + '</span></div>' +
-                  '<div class="mt-hero-sub">共 ' + list.length + ' 位候选人 · 按匹配分排名 · 引擎 ' + esc(res.engine || 'rules-v1') + '</div>' +
+                  '<div class="mt-hero-sub">' + (analyzed ? '本次分析 ' : '共 ') + list.length + ' 位候选人 · 按匹配分排名 · 引擎 ' + esc(res.engine || 'rules-v1') + '</div>' +
                 '</div>' +
               '</div>' +
               '<div class="mt-toolbar">' +
@@ -2444,7 +2555,7 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
               (c.photo ? '<img class="mt-rr-photo" src="' + esc(c.photo) + '" alt="">'
                        : '<div class="mt-rr-photo ph">' + esc((c.name || '?').slice(0, 1)) + '</div>') +
               '<div class="mt-rr-main">' +
-                '<div class="mt-rr-name">' + esc(c.name) +
+                '<div class="mt-rr-name">' + esc(c.name) + '<span class="mt-rr-status" data-siv="' + esc(c.candidateId) + '" data-sof="' + esc(c.candidateId) + '"></span>' +
                   (c.blocked ? '<span class="chip chip-i" style="margin-left:8px">门槛未过</span>' : '') + '</div>' +
                 '<div class="mt-rr-sub">' + esc(c.title || '') + ' · ' + (c.years || 0) + ' 年 · ' +
                   (c.education || '') + (c.city ? ' · ' + esc(c.city) : '') + '</div>' +
@@ -2463,6 +2574,34 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
             '</div>';
           }).join('');
 
+          /* 面试 / offer 回应状态 */
+          Promise.all([
+            (call('company.jobInterviews', jid) || api('/api/company/jobs/' + encodeURIComponent(jid) + '/interviews')),
+            (call('company.offers') || api('/api/company/offers'))
+          ]).then(function (rr) {
+            var ivs = (rr[0] && rr[0].interviews) || [];
+            var ofs = ((rr[1] && rr[1].offers) || []).filter(function (o) { return o.jobId === jid; });
+            var ivBy = {}, ofBy = {};
+            ivs.forEach(function (x) { if (x.candidateId) ivBy[x.candidateId] = x; });
+            ofs.forEach(function (x) { if (x.candidateId) ofBy[x.candidateId] = x; });
+            Array.prototype.forEach.call(box.querySelectorAll('.mt-rank-row'), function (rowEl) {
+              var cid = rowEl.dataset.cand;
+              var nameEl = rowEl.querySelector('.mt-rr-name');
+              if (!nameEl) return;
+              var old = nameEl.querySelector('.mt-rr-status'); if (old) old.remove();
+              var tags = [];
+              if (ivBy[cid]) tags.push('面试：' + (ivBy[cid].status || '待确认'));
+              if (ofBy[cid]) tags.push('offer：' + (ofBy[cid].status || '待接受'));
+              if (tags.length) {
+                var sp = document.createElement('span');
+                sp.className = 'mt-rr-status';
+                sp.style.cssText = 'margin-left:8px;font-size:10px;font-weight:400;color:var(--text-3)';
+                sp.textContent = tags.join(' · ');
+                nameEl.appendChild(sp);
+              }
+            });
+          }).catch(function () {});
+
           /* 行内操作 */
           Array.prototype.forEach.call(box.querySelectorAll('.mt-rank-row'), function (rowEl) {
             var cid = rowEl.dataset.cand;
@@ -2473,18 +2612,11 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
                 var act = btn.dataset.act;
                 if (act === 'detail') { showDetail(root, cid, jid, c); return; }
                 if (act === 'interview') {
-                  (call('company.invite', cid, { jobId: jid }) || api('/api/company/candidates/' + encodeURIComponent(cid) + '/interview', { method: 'POST', body: { jobId: jid } }))
-                    .then(function () { window.HP.toast('已发出面试邀约', c.name || cid); })
-                    .catch(function (e) { window.HP.toast('邀约失败', e.message); });
+                  openInterviewDialog({ candidateId: cid, jobId: jid, candidateName: c.name, jobTitle: job.title, onDone: function () { rank(root, { jobId: jid }); } });
                   return;
                 }
                 if (act === 'offer') {
-                  var salary = prompt('offer 薪资（元/月）', String(c.salaryExpect || 23000));
-                  if (salary === null) return;
-                  (call('company.createOffer', jid, { candidateId: cid, salary: salary + ' 元/月' }) ||
-                    api('/api/company/jobs/' + encodeURIComponent(jid) + '/offers', { method: 'POST', body: { candidateId: cid, salary: salary + ' 元/月' } }))
-                    .then(function () { window.HP.toast('offer 已发出', (c.name || cid) + ' · ' + salary + ' 元/月'); })
-                    .catch(function (e) { window.HP.toast('发送失败', e.message); });
+                  openOfferDialog({ candidateId: cid, jobId: jid, candidateName: c.name, jobTitle: job.title, candidate: c, onDone: function () { rank(root, { jobId: jid }); } });
                 }
               });
             });
@@ -2765,19 +2897,24 @@ function applyWithResumeChoice(jobId, jobTitle, onChosen) {
         });
       });
       panel.querySelector('#mtDInterview').addEventListener('click', function () {
-        (call('company.invite', candidateId, { jobId: jobId }) ||
-          api('/api/company/candidates/' + encodeURIComponent(candidateId) + '/interview', { method: 'POST', body: { jobId: jobId } }))
-          .then(function () { window.HP.toast('已发出面试邀约', r.name || c.name || candidateId); })
-          .catch(function (e) { window.HP.toast('邀约失败', e.message); });
+        openInterviewDialog({ candidateId: candidateId, jobId: jobId, candidateName: r.name || c.name || '', jobTitle: r.jobTitle || c.jobTitle || '', onDone: function () { showDetail(root, candidateId, jobId, summary); } });
       });
       panel.querySelector('#mtDOffer').addEventListener('click', function () {
-        var salary = prompt('offer 薪资（元/月）', String(r.salaryExpect || c.salaryExpect || 23000));
-        if (salary === null) return;
-        (call('company.createOffer', jobId, { candidateId: candidateId, salary: salary + ' 元/月' }) ||
-          api('/api/company/jobs/' + encodeURIComponent(jobId) + '/offers', { method: 'POST', body: { candidateId: candidateId, salary: salary + ' 元/月' } }))
-          .then(function () { window.HP.toast('offer 已发出', (r.name || c.name || candidateId) + ' · ' + salary + ' 元/月'); })
-          .catch(function (e) { window.HP.toast('发送失败', e.message); });
+        openOfferDialog({ candidateId: candidateId, jobId: jobId, candidateName: r.name || c.name || '', jobTitle: r.jobTitle || c.jobTitle || '', candidate: { salaryExpect: r.salaryExpect || c.salaryExpect }, onDone: function () { showDetail(root, candidateId, jobId, summary); } });
       });
+      Promise.all([
+        (call('company.jobInterviews', jobId) || api('/api/company/jobs/' + encodeURIComponent(jobId) + '/interviews')),
+        (call('company.offers') || api('/api/company/offers'))
+      ]).then(function (rr) {
+        var ivs = ((rr[0] && rr[0].interviews) || []).filter(function (x) { return x.candidateId === candidateId; });
+        var ofs = ((rr[1] && rr[1].offers) || []).filter(function (x) { return x.jobId === jobId && x.candidateId === candidateId; });
+        var tags = [];
+        if (ivs.length) tags.push('面试：' + ivs[0].status);
+        if (ofs.length) tags.push('offer：' + ofs[0].status);
+        var el = panel.querySelector('#mtDStatus');
+        if (el) el.textContent = tags.join(' · ');
+      }).catch(function () {});
+
     }).catch(function (e) {
       panel.innerHTML = '<div class="t-muted" style="padding:20px 0">加载详情失败：' + esc(e.message) + '</div>';
     });

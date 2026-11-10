@@ -312,9 +312,14 @@ html[dir="rtl"] .login-lang{right:auto;left:24px;flex-direction:row-reverse}
 .tl-item.wait .tl-title{color:var(--text-3);font-weight:500}
 .divider{height:1px;background:var(--border);border:none;margin:16px 0}
 
+/* 全局表单文字：深色主题下避免浏览器默认黑字（档案 / 岗位编辑 / 弹窗通用） */
+input, select, textarea { color: var(--text); }
+.t-muted { color: var(--text-2) !important; }
+input::placeholder, textarea::placeholder { color: var(--text-3); opacity: 1; }
+html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea { color-scheme: dark; }
 /* ============ Toast ============ */
-#toast-wrap{position:fixed;top:76px;right:24px;z-index:300;display:flex;flex-direction:column;gap:10px}
-.toast{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px 16px;min-width:240px;max-width:340px;font-size:13px;display:flex;gap:10px;align-items:flex-start;animation:toastIn .25s ease}
+#toast-wrap{position:fixed;top:76px;bottom:auto;right:24px;z-index:300;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{pointer-events:none;background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(10px) saturate(1.15);-webkit-backdrop-filter:blur(10px) saturate(1.15);border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px 16px;min-width:240px;max-width:340px;font-size:13px;display:flex;gap:10px;align-items:flex-start;animation:toastIn .25s ease;opacity:.96}
 .toast .ico{width:17px;height:17px;color:var(--primary);flex:0 0 17px;margin-top:1px}
 .toast b{display:block;font-size:13px}
 .toast span{color:var(--text-2);font-size:12px}
@@ -931,6 +936,17 @@ html[dir="rtl"] .login-lang{right:auto;left:24px;flex-direction:row-reverse}
 position:fixed;inset:0;background:rgba(9,14,26,.55);z-index:250;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .18s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .hp-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:560px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;overflow:hidden}
+  /* 弹窗表单统一对比度：深色主题下避免浏览器默认黑字 */
+  .hp-modal, .hp-modal-body { color: var(--text-2); }
+  .hp-modal b, .hp-modal strong, .hp-modal .hp-modal-head b { color: var(--text); }
+  .hp-modal input, .hp-modal select, .hp-modal textarea {
+    color: var(--text) !important;
+    background: var(--surface-2) !important;
+    border-color: var(--border) !important;
+  }
+  .hp-modal input::placeholder, .hp-modal textarea::placeholder { color: var(--text-3) !important; opacity: 1; }
+  html[data-theme="dark"] .hp-modal input, html[data-theme="dark"] .hp-modal select, html[data-theme="dark"] .hp-modal textarea { color-scheme: dark; }
+  .hp-modal .t-muted { color: var(--text-2) !important; }
   .hp-modal.hp-modal-wide{max-width:880px}
   /* ===== 虚拟合同文档样式 ===== */
   .ct-doc{font-size:13px;line-height:1.85;color:var(--text)}
@@ -3930,7 +3946,7 @@ function nextTheme(cur){
     el.className = 'toast';
     el.innerHTML = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 8v5M12 16.5v.5" stroke-linecap="round"/></svg><div><b>'+title+'</b><span>'+msg+'</span></div>';
     wrap.appendChild(el);
-    setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(function(){ el.remove(); }, 320); }, 3200);
+    setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .25s'; setTimeout(function(){ el.remove(); }, 280); }, 1800);
   }
   window.applyTheme = applyTheme;
   window.nextTheme = nextTheme;
@@ -7527,11 +7543,16 @@ window.SubApps.persona = (function(){
                 <div><label class="t-muted" style="font-size:12px">意向国家</label><input class="fld" id="pfCountry" value="阿尔及利亚" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>
               </div>
               <div><label class="t-muted" style="font-size:12px">期望薪资（元/月）</label><input class="fld" id="pfSalary" type="number" value="22000" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>
-              <div><label class="t-muted" style="font-size:12px">工作经历</label><textarea class="fld" id="pfWork" rows="2" placeholder="公司 / 岗位 / 时间 / 主要工作，可多行" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px;resize:vertical;font:inherit;font-size:12.5px"></textarea></div>
-              <div><label class="t-muted" style="font-size:12px">业绩亮点</label><textarea class="fld" id="pfAch" rows="2" placeholder="每行一条，如：换模时间 38→25 分钟，年省 12 万" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px;resize:vertical;font:inherit;font-size:12.5px"></textarea></div>
+              <div><label class="t-muted" style="font-size:12px">工作经历</label><textarea class="fld" id="pfWork" rows="4" placeholder="公司 / 岗位 / 时间 / 主要工作，可多行" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px;resize:vertical;font:inherit;font-size:12.5px">鲁南玻璃制品 / 压机操作工 / 2021-03 — 2024-12
+负责双头压机看机与换模，按工艺卡调整温度与压力参数，日均产量 1,800 件。
+主导换模标准化，换模时间 38 → 25 分钟，年减少停机损失约 12 万元。
+带教新员工 6 名，其中 2 名 3 个月内独立看机。</textarea></div>
+              <div><label class="t-muted" style="font-size:12px">业绩亮点</label><textarea class="fld" id="pfAch" rows="2" placeholder="每行一条，如：换模时间 38→25 分钟，年省 12 万" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px;resize:vertical;font:inherit;font-size:12.5px">换模时间 38 → 25 分钟（-34%），年减少停机损失约 12 万元。
+外观不良率由 4.2% 降至 2.6%，年减少返工约 840 件。
+年度设备点检发现问题 27 起，故障停机时间下降 20%。</textarea></div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div><label class="t-muted" style="font-size:12px">语言能力</label><input class="fld" id="pfLang" data-optional="1" placeholder="如：英语 A2" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>
-                <div><label class="t-muted" style="font-size:12px">家庭支持</label><input class="fld" id="pfFamily" data-optional="1" placeholder="如：已婚 · 配偶支持" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>
+                <div><label class="t-muted" style="font-size:12px">语言能力</label><input class="fld" id="pfLang" data-optional="1" value="英语 A2，可读设备手册" placeholder="如：英语 A2" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>
+                <div><label class="t-muted" style="font-size:12px">家庭支持</label><input class="fld" id="pfFamily" data-optional="1" value="已婚 · 配偶支持长期外派" placeholder="如：已婚 · 配偶支持" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="btn btn-p" data-demo="保存档案">保存档案</button>
@@ -9910,35 +9931,36 @@ window.SubApps.assurance = (function(){
   };
 })();
 </script>
-<script src="js/hp-charts.js"></script>
+<script src="js/hp-charts.js?v=20261110-integration1"></script>
 <link rel="stylesheet" href="css/hp-stage.css">
 <link rel="stylesheet" href="css/hp-stage-light.css">
 <link rel="stylesheet" href="css/hp-doc.css">
 <link rel="stylesheet" href="css/hp-profile-flow.css">
 <link rel="stylesheet" href="css/hp-demo.css">
-<script src="js/hp-stage-markup.js"></script>
-<script src="js/hp-boot.js"></script>
-<script src="js/hp-stage.js"></script>
-<script src="js/hp-i18n.js"></script>
-<script src="js/hp-lang-fetch.js"></script>
-<script src="js/hp-sound.js"></script>
-<script src="js/hp-demo-modal.js"></script>
-<script src="js/hp-profile-flow.js"></script>
-<script src="js/hp-resume-analysis.js"></script>
-<script src="js/hp-company-job.js"></script>
-<script src="js/hp-match-ui.js"></script>
-<script src="js/hp-config.js"></script>
-<script src="js/hp-bridge.js?v=20261109-login2"></script>
-<script src="js/hp-console.js"></script>
-<script src="js/hp-job-analysis.js"></script>
-<script src="js/hp-ai-panel.js"></script>
-  <script src="js/hp-pool.js"></script>
-<script src="js/hp-report.js"></script>
-<script src="js/hp-country.js"></script>
-<script src="js/hp-jobs.js"></script>
-<script src="js/hp-settings-panel.js"></script>
-<script src="js/hp-resume.js"></script>
-<script src="js/hp-i18n-extra.js"></script>
-<a id="platform-home-return" href="../../index.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
+<script src="js/hp-stage-markup.js?v=20261110-integration1"></script>
+<script src="js/hp-boot.js?v=20261110-integration1"></script>
+<script src="js/hp-stage.js?v=20261110-integration1"></script>
+<script src="js/hp-i18n.js?v=20261110-integration1"></script>
+<script src="js/hp-lang-fetch.js?v=20261110-integration1"></script>
+<script src="js/hp-sound.js?v=20261110-integration1"></script>
+<script src="js/hp-demo-modal.js?v=20261110-integration1"></script>
+<script src="js/hp-profile-flow.js?v=20261110-integration1"></script>
+<script src="js/hp-resume-analysis.js?v=20261110-integration1"></script>
+<script src="js/hp-company-job.js?v=20261110-integration1"></script>
+<script src="js/hp-match-ui.js?v=20261110-integration1"></script>
+<script src="js/hp-config.js?v=20261110-cache1"></script>
+<script src="js/hp-read-cache.js?v=20261110-cache1"></script>
+<script src="js/hp-bridge.js?v=20261110-cache1"></script>
+<script src="js/hp-console.js?v=20261110-integration1"></script>
+<script src="js/hp-job-analysis.js?v=20261110-integration1"></script>
+<script src="js/hp-ai-panel.js?v=20261110-integration1"></script>
+  <script src="js/hp-pool.js?v=20261110-cache1"></script>
+<script src="js/hp-report.js?v=20261110-integration1"></script>
+<script src="js/hp-country.js?v=20261110-integration1"></script>
+<script src="js/hp-jobs.js?v=20261110-integration1"></script>
+<script src="js/hp-settings-panel.js?v=20261110-integration1"></script>
+<script src="js/hp-resume.js?v=20261110-integration1"></script>
+<script src="js/hp-i18n-extra.js?v=20261110-integration1"></script>
+<a id="platform-home-return" href="../../platform.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
 </body>
 </html>

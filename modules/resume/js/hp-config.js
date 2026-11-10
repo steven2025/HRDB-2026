@@ -13,7 +13,7 @@
  * ===================================================================== */
 window.HP_CLOUD_BASE = 'https://1506063666-34lsbn3uv2.ap-chengdu.tencentscf.com';
 
-/* 此发布副本使用已部署云函数；不依赖 GitHub Pages 同源 /api。 */
+/* 接入副本使用现有腾讯云函数。 */
 window.HP_API_BASE = window.HP_CLOUD_BASE;
 
 

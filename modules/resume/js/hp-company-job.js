@@ -498,9 +498,10 @@
 
   function diagnose(job) {
     if (document.getElementById('hpJobAI')) return;
+    ensureAudio();
     var wrap = document.createElement('div');
     wrap.id = 'hpJobAI';
-    wrap.innerHTML = '<div class="hp-aiflow-bar"><i class="dot"></i><b id="hjaTitle">岗位 AI 诊断 · 开机动画</b><span>基于当前保存版本</span><div class="acts"><button id="hjaVoice" type="button">语音 ON</button><button id="hjaSkip" type="button">跳过开机 →</button><button id="hjaClose" type="button">关闭 ×</button></div></div>' +
+    wrap.innerHTML = '<div class="hp-aiflow-bar"><i class="dot"></i><b id="hjaTitle">岗位 AI 诊断 · 开机动画</b><span>基于当前保存版本</span><div class="acts"><button id="hjaVoice" type="button">音效 ON</button><button id="hjaSkip" type="button">跳过开机 →</button><button id="hjaClose" type="button">关闭 ×</button></div></div>' +
       '<div class="hp-aiflow-loading" id="hjaLoading">正在启动诊断引擎…</div>' +
       '<iframe class="hp-aiflow-frame" id="hjaFrame" allow="autoplay; fullscreen" src="demo/boot-embed.html?auto&mode=job&doc=' + encodeURIComponent(String((job && job.id) || 'JOB-2026-0011')) + '"></iframe>' +
       '<div class="hp-ai-data" id="hjaData" hidden></div>';
@@ -512,9 +513,32 @@
     var title = wrap.querySelector('#hjaTitle');
     var skip = wrap.querySelector('#hjaSkip');
     var timer;
-    var voiceOn = true;
-    var voiceCache = {};
-    function utter(text) {
+    var sfxOn = true;
+    var audioCtx = null;
+    function ensureAudio() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (e) {}
+    }
+    function beep(freq, dur, vol) {
+      if (!sfxOn) return;
+      ensureAudio();
+      if (!audioCtx) return;
+      try {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.value = freq || 620;
+        g.gain.setValueAtTime(0, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(vol == null ? 0.035 : vol, audioCtx.currentTime + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + (dur || 0.07));
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + (dur || 0.07));
+      } catch (e) {}
+    }
+    function stepSfx(i) { beep([520, 600, 680, 760, 840, 920][i] || 620, 0.06, 0.028); }
+    function finishSfx() { beep(660, 0.09, 0.035); setTimeout(function () { beep(880, 0.12, 0.03); }, 110); }
+    var finalVoiceCache = {};
+    function utterFinal(text) {
       try {
         var u = new SpeechSynthesisUtterance(text);
         var L = (window.HPI18N && HPI18N.lang()) || 'zh';
@@ -523,20 +547,21 @@
         speechSynthesis.speak(u);
       } catch (e) {}
     }
-    function speak(text) {
-      if (!voiceOn || !window.speechSynthesis) return;
+    function speakFinal() {
+      if (!sfxOn || !window.speechSynthesis) return;
+      var text = '分析已完成，建议已生成。';
       var L = (window.HPI18N && HPI18N.lang()) || 'zh';
-      if (L === 'zh' || !/[\u4e00-\u9fa5]/.test(String(text))) { utter(text); return; }
-      if (voiceCache[L + '|' + text]) { utter(voiceCache[L + '|' + text]); return; }
+      if (L === 'zh' || !/[\u4e00-\u9fa5]/.test(text)) { utterFinal(text); return; }
+      if (finalVoiceCache[L]) { utterFinal(finalVoiceCache[L]); return; }
       fetch('/api/translate', {
         method: 'POST', credentials: 'same-origin',
         headers: { 'content-type': 'application/json', 'x-hp-request': '1' },
         body: JSON.stringify({ texts: [text], target: L })
       }).then(function (r) { return r.json(); }).then(function (j) {
         var t = j && j.texts && j.texts[0];
-        if (t) voiceCache[L + '|' + text] = t;
-        utter(t || text);
-      }).catch(function () { utter(text); });
+        if (t) finalVoiceCache[L] = t;
+        utterFinal(t || text);
+      }).catch(function () { utterFinal(text); });
     }
     function localize(root) {
       if (!root || !window.HPI18N || HPI18N.lang() === 'zh') return;
@@ -760,7 +785,6 @@
         var sum = data.querySelector('#hjaSum');
         var voiceLines = ['解析岗位结构。', '提取岗位职责。', '核验硬性要求。', '比对合同与合规信息。', '评估薪资与生活条件。', '生成诊断建议。'];
         try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
-        setTimeout(function () { speak('岗位诊断已启动。'); }, 260);
         steps.forEach(function (el, i) {
           setTimeout(function () {
             if (!document.body.contains(el)) return;
@@ -772,11 +796,12 @@
               target.classList.add('lit');
               target.querySelectorAll('.pending').forEach(function (x) { x.classList.remove('pending'); });
             }
-            speak(voiceLines[i]);
+            stepSfx(i);
             if (i === steps.length - 1 && sum) {
               sum.textContent = '分析完成 · ' + (a.issues || []).length + ' 项待补充';
               localize(sum);
-              speak('岗位诊断完成，建议已生成。');
+              finishSfx();
+              setTimeout(speakFinal, 350);
             }
           }, 420 + i * 620);
         });
@@ -795,10 +820,10 @@
     skip.onclick = show;
     var voiceBtn = wrap.querySelector('#hjaVoice');
     if (voiceBtn) voiceBtn.onclick = function () {
-      voiceOn = !voiceOn;
-      voiceBtn.textContent = '语音 ' + (voiceOn ? 'ON' : 'OFF');
-      if (!voiceOn) { try { speechSynthesis.cancel(); } catch (e) {} }
-      else speak('语音已开启。');
+      sfxOn = !sfxOn;
+      voiceBtn.textContent = '音效 ' + (sfxOn ? 'ON' : 'OFF');
+      if (sfxOn) { ensureAudio(); beep(720, 0.06, 0.03); }
+      else { try { speechSynthesis.cancel(); } catch (e) {} }
     };
     wrap.querySelector('#hjaClose').onclick = close;
     document.addEventListener('keydown', onKey);

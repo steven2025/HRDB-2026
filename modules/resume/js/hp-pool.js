@@ -41,6 +41,7 @@
     '.hpp-seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}',
     '.hpp-seg button{height:32px;padding:0 14px;border:0;background:transparent;color:var(--text-2);font-size:12.5px;cursor:pointer}',
     '.hpp-seg button.on{background:var(--primary);color:#02131f;font-weight:600}',
+    '.hpp-bar .hpp-sort{height:32px;padding:0 8px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font-size:12px;outline:none}',
     '.hpp-bar input{height:32px;padding:0 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);font-size:12.5px;outline:none;width:200px}',
     '.hpp-btn{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:9px;background:none;color:var(--text-2);font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}',
     '.hpp-btn:hover,.hpp-btn.on{border-color:var(--primary);color:var(--primary)}',
@@ -217,7 +218,7 @@
   ].join('');
 
   var state = {
-    tab: 'main', q: '', sel: null, view: 'm', preview: true, detailPane: false, showFilters: false, page: 1,
+    tab: 'main', q: '', sel: null, view: 'm', preview: true, detailPane: false, showFilters: false, page: 1, sort: 'score', jobId: '',
     F: { job: '', country: '', score: '', risk: '', src: '', days: '' }
   };
   try {
@@ -225,12 +226,52 @@
     if (saved.view) state.view = saved.view;
     if (typeof saved.preview === 'boolean') state.preview = saved.preview;
     if (typeof saved.detailPane === 'boolean') state.detailPane = saved.detailPane;
+    if (saved.sort) state.sort = saved.sort;
+    if (saved.jobId) state.jobId = saved.jobId;
   } catch (e) {}
   function saveView() {
-    try { localStorage.setItem('hp.pool.view', JSON.stringify({ view: state.view, preview: state.preview, detailPane: state.detailPane })); } catch (e) {}
+    try { localStorage.setItem('hp.pool.view', JSON.stringify({ view: state.view, preview: state.preview, detailPane: state.detailPane, sort: state.sort, jobId: state.jobId })); } catch (e) {}
   }
 
   var list = [];
+  var jobs = [], jobsScope="", jobsLoadedAt=0;
+  var readPending = {}, listKey = '', listLoadedAt = 0, listSeq = 0, dataRevision = 0;
+  var READ_TTL = 120000, LIST_TTL = 30000;
+  function scopeKey() {
+    var u = window.HPBridge && window.HPBridge.getUser ? window.HPBridge.getUser() : null;
+    var lang = window.HPI18N && window.HPI18N.lang ? window.HPI18N.lang() : 'zh';
+    return [u && (u.id || u.phone) || 'anonymous', u && u.role || '', lang, dataRevision].join('|');
+  }
+  function readJSON(path, force) {
+    var lang = window.HPI18N && window.HPI18N.lang ? window.HPI18N.lang() : 'zh';
+    if (lang !== 'zh' && !/[?&]lang=/.test(path)) path += (path.indexOf('?')<0?'?':'&')+'lang='+encodeURIComponent(lang);
+    var key = scopeKey()+'|'+path+'|'+(force?'reload':'read');
+    if (readPending[key]) return readPending[key];
+    function attempt(retried) {
+      var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timer = setTimeout(function(){if(ctrl)ctrl.abort();},45000);
+      return Promise.resolve().then(function(){return fetch(path,{credentials:'same-origin',cache:'no-store',hpCacheMode:force?'reload':'stale',signal:ctrl?ctrl.signal:undefined});}).then(function(res){
+        if (!res.ok) { var e=new Error('HTTP '+res.status); e.status=res.status; throw e; }
+        var cacheState=res.headers&&res.headers.get('x-hp-read-cache');
+        return res.json().then(function(data){if(data&&typeof data==='object')Object.defineProperty(data,'_hpCacheState',{value:cacheState,configurable:true});return data;});
+      }).finally(function(){clearTimeout(timer);}).catch(function(err){
+        var retryable=err.name==='AbortError'||err.name==='TypeError'||(err.status>=500&&err.status<=599);
+        if (!retried && retryable) return new Promise(function(resolve){setTimeout(resolve,400);}).then(function(){return attempt(true);});
+        if(err.name==='AbortError')throw new Error('请求超时，请点击重试');
+        throw err;
+      });
+    }
+    var promise=attempt(false);readPending[key]=promise;
+    promise.then(function(){if(readPending[key]===promise)delete readPending[key];},function(){if(readPending[key]===promise)delete readPending[key];});
+    return promise;
+  }
+  function previewKey(id) {return scopeKey()+'|'+(state.jobId||'')+'|'+id;}
+  function validateResume(data) {
+    if(!data || data.ok!==true || !Array.isArray(data.pages) || !data.pages.every(function(p){return p&&Array.isArray(p.rows);}))
+      throw new Error('原简历数据格式不完整，请重试');
+    return data;
+  }
+
 
   function injectCSS() {
     if (document.getElementById('hpPoolCSS')) return;
@@ -268,11 +309,16 @@
     return true;
   }
   function rows() {
-    return list.filter(function (x) {
+    var out = list.filter(function (x) {
       if (x.state !== state.tab) return false;
       if (state.q && (x.name + x.job + x.country).indexOf(state.q) < 0) return false;
       return pass(x);
     });
+    if (state.sort === 'score') out.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+    else if (state.sort === 'scoreAsc') out.sort(function (a, b) { return (a.score || 0) - (b.score || 0); });
+    else if (state.sort === 'recent') out.sort(function (a, b) { return days(a) - days(b); });
+    else if (state.sort === 'name') out.sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'zh'); });
+    return out;
   }
   function fcount() { return Object.keys(state.F).filter(function (k) { return state.F[k]; }).length; }
 
@@ -300,6 +346,16 @@
       '</div>' +
       '<input id="hppQ" placeholder="搜姓名 / 岗位 / 国家" value="' + esc(state.q) + '">' +
       '<button class="hpp-btn" id="hppVbtn">' + cur.ic + ' ' + cur.n + '</button>' +
+      '<select class="hpp-sort" id="hppJob" title="按岗位算分" style="max-width:190px">' +
+        '<option value="">全部岗位（最近分析）</option>' +
+        jobs.map(function (j) { return '<option value="' + esc(j.id) + '"' + (state.jobId === j.id ? ' selected' : '') + '>' + esc((j.title || '') + (j.country ? ' · ' + j.country : '')) + '</option>'; }).join('') +
+      '</select>' +
+      '<select class="hpp-sort" id="hppSort" title="排序方式">' +
+        '<option value="score"' + (state.sort === 'score' ? ' selected' : '') + '>匹配分 ↓</option>' +
+        '<option value="scoreAsc"' + (state.sort === 'scoreAsc' ? ' selected' : '') + '>匹配分 ↑</option>' +
+        '<option value="recent"' + (state.sort === 'recent' ? ' selected' : '') + '>最近入库</option>' +
+        '<option value="name"' + (state.sort === 'name' ? ' selected' : '') + '>姓名</option>' +
+      '</select>' +
       '<button class="hpp-btn ' + (state.preview ? 'on' : '') + '" id="hppPbtn">预览窗格</button>' +
       '<button class="hpp-btn ' + (state.showFilters || fcount() ? 'on' : '') + '" id="hppFbtn">筛选' + (fcount() ? ' <b>' + fcount() + '</b>' : '') + ' ▾</button>' +
       (fcount() ? '<button class="hpp-btn" data-clear>清空</button>' : '') +
@@ -463,6 +519,10 @@
       b.onclick = function () { state.tab = b.dataset.tab; state.sel = null; state.page = 1; render(host); };
     });
     host.querySelector('#hppQ').oninput = function (e) { state.q = e.target.value.trim(); state.page = 1; render(host); };
+    var jobEl = host.querySelector('#hppJob');
+    if (jobEl) jobEl.onchange = function () { state.jobId = jobEl.value; state.sel = null; state.page = 1; saveView(); load(host, true); };
+    var sortEl = host.querySelector('#hppSort');
+    if (sortEl) sortEl.onchange = function () { state.sort = sortEl.value; state.page = 1; saveView(); render(host); };
 
     var fb = host.querySelector('#hppFbtn');
     if (fb) fb.onclick = function (e) { e.stopPropagation(); state.showFilters = !state.showFilters; render(host); };
@@ -594,6 +654,7 @@
   var modalState = { data: null, id: null, keyHandler: null };
 
   function closeResumeModal() {
+    modalState.requestSeq=(modalState.requestSeq||0)+1;
     var m = document.getElementById('hpmMask');
     if (m) m.remove();
     if (modalState.keyHandler) { document.removeEventListener('keydown', modalState.keyHandler); modalState.keyHandler = null; }
@@ -632,14 +693,22 @@
     window.addEventListener('afterprint', function () { document.body.classList.remove('hpm-printing'); });
     document.addEventListener('keydown', modalState.keyHandler);
 
-    if (resumeCache[id]) { paintModal(resumeCache[id]); return; }
-    fetch('/api/pool/resume?id=' + encodeURIComponent(id), { credentials: 'same-origin' })
-      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
-      .then(function (data) { resumeCache[id] = data; paintModal(data); })
-      .catch(function () {
-        var b = document.getElementById('hpmBody');
-        if (b) b.innerHTML = '<div class="hpp-rload">原简历加载失败，请刷新重试</div>';
-      });
+    var key = previewKey(id), seq = modalState.requestSeq;
+    var cached=resumeCache[key];
+    // Shared scoped memory cache serves previews and refreshes expired entries.
+    if(!window.HPReadCache&&cached&&Date.now()-cached.at<READ_TTL){paintModal(cached.data);return;}
+    var requestedJob=state.jobId;
+    var path='/api/pool/resume?id='+encodeURIComponent(id)+(state.jobId?'&jobId='+encodeURIComponent(state.jobId):'');
+    readJSON(path).then(validateResume).then(function(data){
+      if(requestedJob&&(!data.job||data.job.id!==requestedJob))throw new Error('云端返回的岗位与当前选择不一致，请刷新或更新云函数');
+      if(modalState.requestSeq!==seq||previewKey(id)!==key)return;
+      resumeCache[key]={at:Date.now(),data:data};paintModal(data);
+    }).catch(function(err){
+      if(modalState.requestSeq!==seq||previewKey(id)!==key)return;
+      var body=document.getElementById('hpmBody');
+      if(body){body.innerHTML='<div class="hpp-rload">原简历加载失败：'+esc(err.message||'网络异常')+'<br><button type="button" class="hpp-btn" data-resume-retry>重新加载</button></div>';
+      body.querySelector('[data-resume-retry]').onclick=function(){delete resumeCache[key];openResumeModal(id);};}
+    });
   }
 
   /* 行内高亮：沿用「简历 AI 分析」的 mark.ai-hit / ai-gap / ai-partial 样式，
@@ -703,6 +772,8 @@
         : 'AI 已按岗位要求标注';
     }
 
+    if(subEl&&d._hpCacheState==='stale')subEl.textContent+=' · 显示近期缓存，正在后台更新…';
+
     if (!d.ok || !d.pages || !d.pages.length) {
       body.innerHTML = '<div class="hpp-rload">该候选人没有可展示的原简历</div>';
       return;
@@ -755,17 +826,65 @@
   }
 
   function load(host, force) {
-    if (list.length && !force) { render(host); return; }
-    fetch('/api/pool', { credentials: 'same-origin' })
-      .then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
-      .then(function (d) { list = (d && d.items) ? d.items : DEMO.slice(); render(host); })
-      .catch(function () { list = DEMO.slice(); render(host); });
+    var key=scopeKey()+'|'+(state.jobId||''),seq=++listSeq;
+    if(!force&&listKey===key&&Date.now()-listLoadedAt<LIST_TTL){render(host);return;}
+    host.innerHTML='<div class="hpp-rload">正在加载简历库…</div>';
+    return readJSON('/api/pool'+(state.jobId?'?jobId='+encodeURIComponent(state.jobId):''),force).then(function(data){
+      if(seq!==listSeq||key!==scopeKey()+'|'+(state.jobId||''))return;
+      if(!data||!Array.isArray(data.items))throw new Error('简历库数据格式不完整');
+      if(state.jobId&&data.jobId!==state.jobId)throw new Error('云端尚未支持按岗位算分，请切回全部岗位或更新云函数');
+      list=data.items;listKey=key;listLoadedAt=Date.now();render(host);
+      cacheNotice(host,data._hpCacheState==='stale'?'显示近期缓存，正在后台更新…':'');
+    }).catch(function(err){
+      if(seq!==listSeq||key!==scopeKey()+'|'+(state.jobId||''))return;
+      host.innerHTML='<div class="hpp-rload">简历库加载失败：'+esc(err.message||'网络异常')+'<br><button type="button" class="hpp-btn" data-pool-retry>重新加载</button>'+(state.jobId?'<button type="button" class="hpp-btn" data-pool-all>切回全部岗位</button>':'')+'</div>';
+      host.querySelector('[data-pool-retry]').onclick=function(){load(host,true);loadJobs(host);};
+      var all=host.querySelector('[data-pool-all]');if(all)all.onclick=function(){state.jobId='';state.sel=null;saveView();load(host,true);loadJobs(host);};
+    });
+  }
+  function loadJobs(host) {
+    var scope=scopeKey();
+    if(jobs.length&&jobsScope===scope&&Date.now()-jobsLoadedAt<60000)return Promise.resolve();
+    if(jobsScope!==scope)jobs=[];
+    return readJSON('/api/company/jobs').then(function(data){
+      if(scope!==scopeKey())return;
+      jobs=(data&&(data.jobs||data.items))||[];
+      if(!Array.isArray(jobs))jobs=[];
+      jobsScope=scope;jobsLoadedAt=Date.now();
+      if(host&&listKey===scopeKey()+'|'+(state.jobId||''))render(host);
+    }).catch(function(){});
   }
 
+
+  function cacheNotice(host,message){
+    if(!host||!host.querySelector)return;
+    var note=host.querySelector('[data-cache-notice]');
+    if(!message){if(note)note.remove();return;}
+    if(!note){note=document.createElement('div');note.setAttribute('data-cache-notice','');note.style.cssText='padding:7px 10px;color:var(--text-3);font-size:12px';host.prepend(note);}
+    note.textContent=message;
+  }
+  document.addEventListener('hp:read-cache-update',function(event){
+    var d=event.detail||{};
+    setTimeout(function(){
+      if(d.error){if(d.path==='/api/pool')cacheNotice(currentHost,'后台更新未完成，暂显示近期缓存；可点击刷新重试。');if(d.path==='/api/pool/resume'&&modalState.data&&modalState.data._hpCacheState==='stale'){var sub=document.getElementById('hpmSub');if(sub)sub.textContent='显示近期缓存；后台更新未完成，请稍后重新打开重试。';}return;}
+      var query=new URLSearchParams(d.query||'');
+      if(d.path==='/api/pool'&&(query.get('jobId')||'')!==(state.jobId||''))return;
+      if(d.path==='/api/pool/resume'&&(query.get('id')!==String(modalState.id)||(query.get('jobId')||'')!==(state.jobId||'')))return;
+      if(d.path==='/api/pool'&&currentHost){listLoadedAt=0;load(currentHost,false);}
+      if(d.path==='/api/company/jobs'&&currentHost){jobs=[];loadJobs(currentHost);}
+      if(d.path==='/api/pool/resume'&&modalState.id&&document.getElementById('hpmMask')){
+        var id=modalState.id;delete resumeCache[previewKey(id)];openResumeModal(id);
+      }
+    },0);
+  });
+
+  var currentHost = null;
   function mount(host) {
+    currentHost = host;
     if (!host) return;
     injectCSS();
-    if (list.length) { render(host); return; }
+    loadJobs(host);
+    if (listKey===scopeKey()+'|'+(state.jobId||'')&&Date.now()-listLoadedAt<LIST_TTL) { render(host); return; }
     host.innerHTML = '<div style="color:var(--text-3);font-size:13px;padding:10px 0">加载中…</div>';
     load(host);
   }
@@ -784,8 +903,16 @@
   /* 切语言时清缓存，让 showView 重新按新语言拉数据 */
   function invalidate() {
     list.length = 0;
+    if(window.HPReadCache)window.HPReadCache.invalidate();
+    jobs.length=0;listKey='';listLoadedAt=0;listSeq++;dataRevision++;resumeCache={};closeResumeModal();
     state.sel = null;
   }
+
+  document.addEventListener('hp:weights', function (e) {
+    if (!e.detail || (e.detail.role !== 'company' && e.detail.role !== 'job')) return;
+    invalidate();
+    if (currentHost) load(currentHost, true);
+  });
 
   window.HPPOOL = { mount: mount, invalidate: invalidate, DEMO: DEMO };
 })();

@@ -639,6 +639,7 @@ function saveStageSnapshot() {
             const activeId = (document.querySelector('.subapp.active') || {}).id || '';
             const isPersona = activeId.indexOf('persona') >= 0 || CURRENT.mode === 'persona';
             saveStageSnapshot();
+            markStageResultCtx();
             window.__hpFromStage = true;
             location.hash = isPersona ? '#/persona/rank' : '#/company/rank';
           });
@@ -646,6 +647,13 @@ function saveStageSnapshot() {
       } catch (e) { console.warn('restore bind failed', e); }
     }
   };
+}
+
+/** 把「本次分析的岗位 + 候选人名单」带到结果页，避免结果页回退到第一个岗位/全量候选人。 */
+function markStageResultCtx() {
+  window.HPS_CFG_JOB = HPS.job || (window.__HPS_CFG && window.__HPS_CFG.job) || '';
+  window.HPS_ANALYZED_CANDS = (HPS.queue && HPS.queue.length) ? HPS.queue.slice() : null;
+  window.__hpFromStage = true;
 }
 
 /** 在榜单里高亮当前选中的那一行（必要时自动切到对应页） */
@@ -1975,6 +1983,7 @@ async function initPage() {
          正确顺序：initPage 只准备数据 → mount 播开机动画 → 再用 hpsRunBatch 连播。 */
       if (HPS.queue.length > 1) { HPS_BATCH_ACTIVE = true; HPS_BATCH_MODE = 'company'; }
       sel.addEventListener('change', async () => {
+        HPS.job = sel.value; HPS.jobs = [sel.value]; HPS.queue = []; HPS.cands = [];
         try { await load(sel.value); reset(true); runConstruction(); runDemo(); }
         catch (err) { setTip('加载失败：' + err.message); }
       });
@@ -2006,6 +2015,7 @@ async function initPage() {
       if (HPS.jobs.length > 1) { HPS_BATCH_ACTIVE = true; HPS_BATCH_MODE = 'persona'; }
       initTuner(rec.candidate, CURRENT.trace && CURRENT.trace.spec);
       sel.addEventListener('change', async () => {
+        HPS.job = sel.value; HPS.jobs = [sel.value]; HPS.queue = []; HPS.cands = [];
         try {
           await load(sel.value);
           initTuner(rec.candidate, CURRENT.trace && CURRENT.trace.spec);
@@ -2037,7 +2047,7 @@ async function initPage() {
         const isPersona = activeId.indexOf('persona') >= 0 || CURRENT.mode === 'persona';
         /* 保存现场：从结果页返回时原样还原，不重播动画 */
         saveStageSnapshot();
-        /* 标记来源：结果页的返回按钮据此回到分析页 */
+        markStageResultCtx();
         window.__hpFromStage = true;
         location.hash = isPersona ? '#/persona/rank' : '#/company/rank';
       });

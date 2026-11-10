@@ -96,7 +96,7 @@
     var base = opts.json === false ? {} : { 'content-type': 'application/json' };
     var headers = buildHeaders(Object.assign(base, opts.headers || {}));
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, opts.timeout || 15000);
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, opts.timeout || 45000);
     return fetch(url, {
       method: opts.method || 'GET',
       headers: headers,
@@ -555,8 +555,11 @@
       batchApply: function (payload) { return call('/api/persona/jobs/batch-apply', 'POST', payload || {}); },
       compare: function (payload) { return call('/api/persona/jobs/compare', 'POST', payload || {}); },
       offers: function () { return call('/api/persona/offers', 'GET'); },
-      acceptOffer: function (id) { return call('/api/persona/offers/' + encodeURIComponent(id) + '/accept', 'POST', {}); },
-      declineOffer: function (id) { return call('/api/persona/offers/' + encodeURIComponent(id) + '/decline', 'POST', {}); },
+      interviews: function () { return call('/api/persona/interviews', 'GET'); },
+      respondInterview: function (id, action, payload) { return call('/api/persona/interviews/' + encodeURIComponent(id) + '/' + action, 'POST', payload || {}); },
+      acceptOffer: function (id, payload) { return call('/api/persona/offers/' + encodeURIComponent(id) + '/accept', 'POST', payload || {}); },
+      declineOffer: function (id, payload) { return call('/api/persona/offers/' + encodeURIComponent(id) + '/decline', 'POST', payload || {}); },
+      negotiateOffer: function (id, payload) { return call('/api/persona/offers/' + encodeURIComponent(id) + '/negotiate', 'POST', payload || {}); },
       matchTrace: function (jobId, candidateId) {
         return call('/api/match/trace?jobId=' + encodeURIComponent(jobId) + '&candidateId=' + encodeURIComponent(candidateId), 'GET');
       }
@@ -590,6 +593,7 @@
       saveWeights: function (payload) { return call('/api/company/weights', 'PUT', payload || {}); },
       invite: function (id, payload) { return call('/api/company/candidates/' + encodeURIComponent(id) + '/interview', 'POST', payload || {}); },
       createOffer: function (jobId, payload) { return call('/api/company/jobs/' + encodeURIComponent(jobId) + '/offers', 'POST', payload || {}); },
+      jobInterviews: function (jobId) { return call('/api/company/jobs/' + encodeURIComponent(jobId) + '/interviews', 'GET'); },
       offers: function () { return call('/api/company/offers', 'GET'); },
       funnel: function (jobId) { return call('/api/company/jobs/' + encodeURIComponent(jobId) + '/funnel', 'GET'); }
     },
@@ -855,13 +859,7 @@
     fileMode: FILE_MODE,
     state: state,
     isOnline: function () { return state.online; },
-    reconnect: function () {
-      return health().then(function (online) {
-        state.online = online;
-        if (!online) throw new Error('云服务暂时未连接，请稍后重试');
-        return true;
-      });
-    },
+    reconnect: function () { return health().then(function (online) { state.online=online; if(!online) throw new Error('云服务暂未连接，请稍后重试'); return true; }); },
     isAuthed: function () { return !!state.data; },
     getUser: function () { return state.user; },
     /** 三端分离：只有演示账号能在三端之间切换

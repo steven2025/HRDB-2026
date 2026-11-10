@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<script src="../js/hp-config.js?v=20261110-cache1"></script>
+<script src="../js/hp-read-cache.js?v=20261110-cache1"></script>
 <meta charset="UTF-8">
 <title>CORE ONLINE · 系统运转</title>
 <style>
@@ -188,8 +190,8 @@ svg.links path{fill:none;stroke:rgba(111,227,255,.7);stroke-width:2.8;filter:dro
   <div class="flash" id="flash"></div>
 </div>
 
-<!-- 原始包缺少 assets/world-geo.js；未伪造该素材。 -->
-<!-- 原始包缺少 播报文案.js；未伪造该素材。 -->
+<script src="assets/world-geo.js"></script>
+<!-- 源包未附播报文案.js，沿用页面内置 BOOT_LINES。 -->
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 /* ================= 可修改配置：改这里就行 ================= */
@@ -240,6 +242,7 @@ function smoothSpeech(text){
 }
 function speak(text){
   if(!window.speechSynthesis) return;
+  if(new URLSearchParams(location.search).get('mute')==='1') return;
   try{speechSynthesis.cancel();}catch(e){}
   const u=new SpeechSynthesisUtterance(smoothSpeech(text)), v=pickVoice();
   if(v){u.voice=v;u.lang=v.lang;} else u.lang='zh-CN';
@@ -552,5 +555,7 @@ telemetry();
 addEventListener('resize',()=>{ initCV(); buildLinks(); });
 (function init(){ if(location.search.includes('auto')) run(); })();
 </script>
+<script src="iframe-i18n.js"></script>
 </body>
 </html>
+
