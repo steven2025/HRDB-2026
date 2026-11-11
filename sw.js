@@ -1,4 +1,4 @@
-const CACHE='globalhr-shell-20261111-v1';
+const CACHE='globalhr-shell-20261111-v2';
 const ROOT=new URL('./',self.location.href);
 const SHELL=['index.html','platform.html','home.js','pwa.js','manifest.webmanifest','assets/cohr-logo.jpg','assets/pwa/icon-192.png','assets/pwa/icon-512.png','assets/pwa/icon-180.png','assets/pwa/icon-maskable-512.png'];
 const ALLOWED=new Set(SHELL.map(p=>new URL(p,ROOT).pathname));
