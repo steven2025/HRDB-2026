@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GlobalHR · 双智能体（单文件版）</title>
+<title>GlobalHR · 合规签约</title>
 <style>
 :root{
   --bg:#06080f;
@@ -180,11 +180,137 @@ const appView  = document.getElementById('appView');
 const frame    = document.getElementById('appFrame');
 const appTitle = document.getElementById('appTitle');
 
+
+/* ===== 聚焦脉冲放大特效：从外层注入到 iframe，不碰 srcdoc 内部 ===== */
+function injectZoomEffect(){
+  try{
+    const d = frame.contentDocument;
+    if(!d) return;
+    // 只给合同助手加（检查有没有 cmpOv 元素）
+    if(!d.getElementById('cmpOv')) return;
+
+    // 1. 注入 CSS
+    const style = d.createElement('style');
+    style.textContent = `
+      .zoom-backdrop{position:fixed;inset:0;z-index:200;background:rgba(1,2,6,.86);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .35s}
+      .zoom-backdrop.on{opacity:1;pointer-events:auto}
+      .zoom-card{position:fixed;z-index:210;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(165deg,rgba(18,24,40,.98),rgba(8,11,20,.99));border:1px solid rgba(47,242,255,.45);box-shadow:0 0 0 1px rgba(47,242,255,.12),0 0 70px rgba(47,242,255,.22),0 40px 100px rgba(0,0,0,.7);transition:left .5s cubic-bezier(.2,1.35,.35,1),top .5s cubic-bezier(.2,1.35,.35,1),width .5s cubic-bezier(.2,1.35,.35,1),height .5s cubic-bezier(.2,1.35,.35,1),border-radius .4s;will-change:left,top,width,height}
+      .zoom-card .zc-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.09);flex:none}
+      .zoom-card .zc-h b{font-size:15px;font-weight:700;color:#eafdff}
+      .zoom-card .zc-b{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+      .zoom-card .zc-tip{position:absolute;right:16px;bottom:12px;font:9.5px/1 Consolas,monospace;letter-spacing:.5px;color:rgba(150,175,205,.8)}
+      .zoom-card .sweep{position:absolute;top:0;left:-40%;width:40%;height:100%;pointer-events:none;background:linear-gradient(100deg,transparent,rgba(140,250,255,.18),transparent)}
+      .zoom-card.open .sweep{animation:sweepGo .9s ease-out}
+      @keyframes sweepGo{to{left:120%}}
+      .zoom-card.open::before,.zoom-card.open::after{content:'';position:absolute;inset:0;border-radius:18px;border:1px solid rgba(47,242,255,.5);pointer-events:none;animation:pulseRing 1.4s ease-out}
+      .zoom-card.open::after{animation-delay:.35s;border-color:rgba(255,62,165,.4)}
+      @keyframes pulseRing{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.12);opacity:0}}
+    `;
+    d.head.appendChild(style);
+
+    // 2. 加 backdrop 元素
+    const bd = d.createElement('div');
+    bd.className = 'zoom-backdrop';
+    bd.id = 'zoomBackdrop';
+    d.body.appendChild(bd);
+
+    // 3. 加 JS 函数
+    d.defaultView.eval(`
+      var openZoomCard=null, zoomSrcRect=null;
+      function zoomFrom(srcEl, html){
+        closeZoom(true);
+        var r=srcEl.getBoundingClientRect();
+        var card=document.createElement('div');
+        card.className='zoom-card';
+        card.innerHTML=html;
+        card.style.left=r.left+'px';card.style.top=r.top+'px';
+        card.style.width=r.width+'px';card.style.height=r.height+'px';
+        card.style.borderRadius='11px';
+        document.body.appendChild(card);
+        zoomSrcRect=r;
+        var vw=innerWidth,vh=innerHeight;
+        var tw=Math.min(880,vw*0.62), th=Math.min(560,vh*0.66);
+        var tl=(vw-tw)/2, tp=(vh-th)/2;
+        var bd=document.getElementById('zoomBackdrop');
+        if(bd) bd.classList.add('on');
+        openZoomCard=card;
+        requestAnimationFrame(function(){
+          card.style.left=tl+'px';card.style.top=tp+'px';
+          card.style.width=tw+'px';card.style.height=th+'px';
+          card.style.borderRadius='18px';
+          card.classList.add('open');
+        });
+        card.addEventListener('click',function(e){ e.stopPropagation(); });
+      }
+      function closeZoom(instant){
+        if(!openZoomCard) return;
+        var card=openZoomCard; openZoomCard=null;
+        var bd=document.getElementById('zoomBackdrop');
+        if(bd) bd.classList.remove('on');
+        card.classList.remove('open');
+        if(instant){ card.remove(); return; }
+        if(zoomSrcRect){
+          card.style.left=zoomSrcRect.left+'px';card.style.top=zoomSrcRect.top+'px';
+          card.style.width=zoomSrcRect.width+'px';card.style.height=zoomSrcRect.height+'px';
+          card.style.borderRadius='11px';
+        }
+        setTimeout(function(){ card.remove(); },600);
+      }
+      (function(){
+        var bd=document.getElementById('zoomBackdrop');
+        if(bd) bd.addEventListener('click',function(){ closeZoom(); });
+        addEventListener('keydown',function(e){ if(e.key==='Escape') closeZoom(); });
+      })();
+    `);
+
+    // 4. 拦截 renderList 里的 row.onclick
+    // 方法：监听 cmpList 的点击事件，委托处理
+    const cmpList = d.getElementById('cmpList');
+    if(cmpList){
+      cmpList.addEventListener('click', function(e){
+        const row = e.target.closest('.row');
+        if(!row) return;
+        // 等 selectClause 执行完再放大
+        setTimeout(()=>{
+          const pane = d.getElementById('pane');
+          if(!pane) return;
+          const rt = row.querySelector('.rt');
+          const title = rt ? rt.textContent : '';
+          d.defaultView.zoomFrom(row, '<div class="zc-h"><b>'+title+'</b></div><div class="zc-b">'+pane.innerHTML+'</div><div class="zc-tip">点击空白处 / Esc 关闭</div><div class="sweep"></div>');
+        }, 100);
+      });
+    }
+
+    // 5. 给 pane 加点击放大
+    const pane = d.getElementById('pane');
+    if(pane){
+      pane.style.cursor = 'zoom-in';
+      pane.addEventListener('click', function(e){
+        if(e.target.closest('.edit') || e.target.closest('button')) return;
+        // 找当前条款标题
+        const activeRow = d.querySelector('#cmpList .row.active');
+        let title = '';
+        if(activeRow){
+          const rt = activeRow.querySelector('.rt');
+          title = rt ? rt.textContent : '';
+        }
+        d.defaultView.zoomFrom(pane, '<div class="zc-h"><b>'+title+'</b></div><div class="zc-b">'+pane.innerHTML+'</div><div class="zc-tip">点击空白处 / Esc 关闭</div><div class="sweep"></div>');
+      });
+    }
+
+  }catch(err){
+    console.warn('injectZoomEffect failed:', err);
+  }
+}
+
 function openApp(key){
   const app = APPS[key];
   if(!app) return;
   appTitle.innerHTML = app.title + '<small>' + app.en + '</small>';
-  frame.onload = ()=> applyFrameScale();
+  frame.onload = ()=>{
+    applyFrameScale();
+    injectZoomEffect();
+  };
   frame.srcdoc = app.srcdoc;
   portal.style.display = 'none';
   appView.classList.add('on');

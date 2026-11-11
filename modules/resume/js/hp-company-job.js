@@ -114,7 +114,7 @@
       var b = document.createElement('button');
       b.className = 'btn btn-p btn-sm';
       b.id = 'btnNewJob';
-      b.textContent = '新建岗位';
+      b.textContent = tr('新建岗位');
       b.style.marginLeft = 'auto';
       b.onclick = function () { openForm(null); };
       title.appendChild(b);
@@ -136,25 +136,61 @@
   }
 
   function statusChip(st) {
-    return st === 'published' ? '<span class="chip chip-s">已发布</span>' : '<span class="chip chip-w">草稿</span>';
+    return st === 'published' ? '<span class="chip chip-s">' + tr('已发布') + '</span>' : '<span class="chip chip-w">' + tr('草稿') + '</span>';
+  }
+
+  var jobsView = null, viewLang = '', trCache = {};
+  function tr(x) { try { var v = window.HPI18N && HPI18N.t ? HPI18N.t(x) : x; return v || x; } catch (e) { return x; } }
+  function localizeJobs(list, L) {
+    var texts = [], map = {};
+    var add = function (v) { if (typeof v === 'string' && v.trim() && !map[v]) { map[v] = 1; texts.push(v); } };
+    list.forEach(function (j) { ['title', 'country', 'project', 'salary'].forEach(function (k) { add(j[k]); }); });
+    if (!texts.length) return Promise.resolve(list.map(function (j) { return Object.assign({}, j); }));
+    var pending = texts.filter(function (t) { return !trCache[L + '|' + t]; });
+    var base = Promise.resolve();
+    if (pending.length) {
+      base = fetch('/api/translate', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'content-type': 'application/json', 'x-hp-request': '1' },
+        body: JSON.stringify({ texts: pending, target: L })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.texts) pending.forEach(function (t, i) { if (j.texts[i] && j.texts[i] !== t) trCache[L + '|' + t] = j.texts[i]; });
+      }).catch(function () {});
+    }
+    return base.then(function () {
+      return list.map(function (j) {
+        var o = Object.assign({}, j);
+        ['title', 'country', 'project', 'salary'].forEach(function (k) { var v = trCache[L + '|' + o[k]]; if (v) o[k] = v; });
+        if (o.salary) o.salary = o.salary.replace(/元\s*\/\s*(mois|月)/g, 'CNY / mois').replace(/元\/月/g, 'CNY / mois');
+        return o;
+      });
+    });
   }
 
   function renderList() {
     var list = document.getElementById('jobManageList');
     if (!list) return;
-    var arr = jobs.filter(function (j) { return filter === 'all' || j.status === filter; });
+    var L = (window.HPI18N && HPI18N.lang && HPI18N.lang()) || 'zh';
+    if (L !== 'zh' && viewLang !== L) {
+      viewLang = L;
+      list.innerHTML = '<div class="t-muted" style="padding:18px 2px;font-size:12px">' + tr('正在翻译…') + '</div>';
+      localizeJobs(jobs, L).then(function (rows) { jobsView = rows; renderList(); });
+      return;
+    }
+    var src = (L !== 'zh' && viewLang === L && jobsView) ? jobsView : jobs;
+    var arr = src.filter(function (j) { return filter === 'all' || j.status === filter; });
     if (!arr.length) {
-      list.innerHTML = '<div class="t-muted" style="padding:18px 2px;font-size:12px">暂无' + (filter === 'draft' ? '草稿' : filter === 'published' ? '已发布' : '') + '岗位，点右上角「新建岗位」。</div>';
+      list.innerHTML = '<div class="t-muted" style="padding:18px 2px;font-size:12px">' + tr('暂无岗位') + '，' + tr('点右上角「新建岗位」。') + '</div>';
       return;
     }
     list.innerHTML = arr.map(function (j) {
       return '<div class="cj-row" data-id="' + esc(j.id) + '">' +
-        '<div class="cj-main"><div class="cj-title">' + esc(j.title || '未命名岗位') + ' ' + statusChip(j.status) + '</div>' +
-        '<div class="cj-sub">' + esc(j.country || '') + ' · ' + esc(j.salary || '薪资待定') + ' · 招 ' + (j.headcount || 1) + ' 人 · ' + esc(j.project || '') + '</div></div>' +
-        '<div class="cj-ops"><button class="btn btn-o btn-sm" data-act="preview">预览</button>' +
-        '<button class="btn btn-o btn-sm" data-act="edit">编辑</button>' +
-        (j.status === 'published' ? '<button class="btn btn-o btn-sm" data-act="unpublish">取消发布</button>' : '<button class="btn btn-p btn-sm" data-act="publish">发布</button>') +
-        '<button class="btn btn-o btn-sm" data-act="delete" style="color:var(--danger)">删除</button></div></div>';
+        '<div class="cj-main"><div class="cj-title">' + esc(j.title || tr('未命名岗位')) + ' ' + statusChip(j.status) + '</div>' +
+        '<div class="cj-sub">' + esc(j.country || '') + ' · ' + esc(j.salary || tr('薪资待定')) + ' · ' + tr('招') + ' ' + (j.headcount || 1) + ' ' + tr('人') + ' · ' + esc(j.project || '') + '</div></div>' +
+        '<div class="cj-ops"><button class="btn btn-o btn-sm" data-act="preview">' + tr('预览') + '</button>' +
+        '<button class="btn btn-o btn-sm" data-act="edit">' + tr('编辑') + '</button>' +
+        (j.status === 'published' ? '<button class="btn btn-o btn-sm" data-act="unpublish">' + tr('取消发布') + '</button>' : '<button class="btn btn-p btn-sm" data-act="publish">' + tr('发布') + '</button>') +
+        '<button class="btn btn-o btn-sm" data-act="delete" style="color:var(--danger)">' + tr('删除') + '</button></div></div>';
     }).join('');
     list.querySelectorAll('.cj-row').forEach(function (row) {
       var job = jobs.filter(function (x) { return x.id === row.dataset.id; })[0];
@@ -211,22 +247,32 @@
   }
 
   function openForm(job) {
+    var L = (window.HPI18N && HPI18N.lang && HPI18N.lang()) || 'zh';
+    if(L !== 'zh' && job && job.id){
+      localizeJobContent(job, L).then(function(j){ renderForm(j, job); }).catch(function(){ renderForm(job, job); });
+      return;
+    }
+    renderForm(job, job);
+  }
+
+  function renderForm(job, sourceJob) {
     job = job || {};
+    sourceJob = sourceJob || job;
     var host = document.getElementById('jobPreviewHost');
     var listCard = document.getElementById('jobManageList') && document.getElementById('jobManageList').closest('.card');
     if (!host) return;
     var body = '<div style="display:grid;gap:10px;font-size:12px">' +
-      '<div><label class="t-muted">岗位名称</label><input id="cjTitle" value="' + esc(job.title || '') + '" placeholder="如：玻璃压机操作工" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">项目</label><input id="cjProject" value="' + esc(job.project || '') + '" placeholder="如：阿尔及利亚玻璃制品工厂" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">国家</label><input id="cjCountry" value="' + esc(job.country || '') + '" placeholder="如：阿尔及利亚" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">招聘人数</label><input id="cjHead" type="number" value="' + (job.headcount || 1) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">合同周期</label><input id="cjContract" value="' + esc(job.contract || '') + '" placeholder="如：24 个月" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
-      '<div><label class="t-muted">薪资</label><input id="cjSalary" value="' + esc(job.salary || '') + '" placeholder="如：20,000 - 25,000 元/月" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
-      '<div><label class="t-muted">岗位职责（每行一条）</label><textarea id="cjDuties" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.duties || []).join('\n')) + '</textarea></div>' +
-      '<div><label class="t-muted">硬性要求（每行一条）</label><textarea id="cjHard" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.hard || []).join('\n')) + '</textarea></div>' +
-      '<div><label class="t-muted">优先条件（每行一条）</label><textarea id="cjPref" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.pref || []).join('\n')) + '</textarea></div>' +
-      '<div><label class="t-muted">工作与生活 / 福利（每行一条）</label><textarea id="cjLife" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.life || []).join('\n')) + '</textarea></div>' +
+      '<div><label class="t-muted">'+tr('岗位名称')+'</label><input id="cjTitle" value="' + esc(job.title || '') + '" placeholder="'+tr('如：玻璃压机操作工')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">'+tr('项目')+'</label><input id="cjProject" value="' + esc(job.project || '') + '" placeholder="'+tr('如：阿尔及利亚玻璃制品工厂')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">'+tr('国家')+'</label><input id="cjCountry" value="' + esc(job.country || '') + '" placeholder="'+tr('如：阿尔及利亚')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">'+tr('招聘人数')+'</label><input id="cjHead" type="number" value="' + (job.headcount || 1) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">'+tr('合同周期')+'</label><input id="cjContract" value="' + esc(job.contract || '') + '" placeholder="'+tr('如：24 个月')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div><label class="t-muted">'+tr('薪资')+'</label><input id="cjSalary" value="' + esc(job.salary || '') + '" placeholder="'+tr('如：20,000 - 25,000 元/月')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+      '<div><label class="t-muted">'+tr('岗位职责（每行一条）')+'</label><textarea id="cjDuties" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.duties || []).join('\n')) + '</textarea></div>' +
+      '<div><label class="t-muted">'+tr('硬性要求（每行一条）')+'</label><textarea id="cjHard" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.hard || []).join('\n')) + '</textarea></div>' +
+      '<div><label class="t-muted">'+tr('优先条件（每行一条）')+'</label><textarea id="cjPref" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.pref || []).join('\n')) + '</textarea></div>' +
+      '<div><label class="t-muted">'+tr('工作与生活 / 福利（每行一条）')+'</label><textarea id="cjLife" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit">' + esc((job.life || []).join('\n')) + '</textarea></div>' +
       '</div>';
-    host.innerHTML = '<div class="pf-preview"><div class="pf-preview-bar"><div><div class="eyebrow">JOB EDITOR</div><h2>' + (job.id ? '编辑岗位' : '新建岗位') + ' <span>保存后进入纸张预览</span></h2></div>' +
-      '<div class="pf-preview-acts"><button class="btn btn-o btn-sm" id="cjPaste" type="button">粘贴 JD 自动填</button><button class="btn btn-o btn-sm" id="cjCancel" type="button">取消</button><button class="btn btn-p btn-sm" id="cjSave" type="button">保存草稿</button></div></div>' +
+    host.innerHTML = '<div class="pf-preview"><div class="pf-preview-bar"><div><div class="eyebrow">JOB EDITOR</div><h2>' + tr(job.id ? '编辑岗位' : '新建岗位') + ' <span>'+tr('保存后进入纸张预览')+'</span></h2></div>' +
+      '<div class="pf-preview-acts"><button class="btn btn-o btn-sm" id="cjPaste" type="button">'+tr('粘贴 JD 自动填')+'</button><button class="btn btn-o btn-sm" id="cjCancel" type="button">'+tr('取消')+'</button><button class="btn btn-p btn-sm" id="cjSave" type="button">'+tr('保存草稿')+'</button></div></div>' +
       '<div class="card card-pad" style="margin-top:12px">' + body + '</div></div>';
     host.style.display = 'block';
     if (listCard) listCard.style.display = 'none';
@@ -244,17 +290,30 @@
       if (!title.trim()) { toast('请填写', '岗位名称不能为空'); return; }
       if (!country.trim()) { toast('请填写', '国家不能为空'); return; }
       if (!salary.trim()) { toast('请填写', '薪资不能为空'); return; }
+      function keepSource(cur, display, source){
+        if (String(cur == null ? '' : cur).trim() === String(display == null ? '' : display).trim()) return source == null ? '' : source;
+        return cur;
+      }
+      function keepList(cur, displayArr, sourceArr){
+        var disp = (displayArr || []).join('\n');
+        if (String(cur == null ? '' : cur).trim() === disp.trim()) return sourceArr || [];
+        return lines(cur);
+      }
+      var dutiesVal = (document.getElementById('cjDuties') || {}).value || '';
+      var hardVal = (document.getElementById('cjHard') || {}).value || '';
+      var prefVal = (document.getElementById('cjPref') || {}).value || '';
+      var lifeVal = (document.getElementById('cjLife') || {}).value || '';
       var next = {
         id: job.id || ('cj-' + Date.now()),
-        project: (document.getElementById('cjProject') || {}).value || '',
-        title: title.trim(), country: country.trim(), salary: salary.trim(),
+        project: keepSource((document.getElementById('cjProject') || {}).value || '', job.project, sourceJob.project),
+        title: keepSource(title, job.title, sourceJob.title), country: keepSource(country, job.country, sourceJob.country), salary: keepSource(salary, job.salary, sourceJob.salary),
         headcount: Number((document.getElementById('cjHead') || {}).value || 1),
-        contract: (document.getElementById('cjContract') || {}).value || '',
-        duties: lines((document.getElementById('cjDuties') || {}).value),
-        hard: lines((document.getElementById('cjHard') || {}).value),
-        pref: lines((document.getElementById('cjPref') || {}).value),
-        life: lines((document.getElementById('cjLife') || {}).value),
-        benefits: job.benefits || [],
+        contract: keepSource((document.getElementById('cjContract') || {}).value || '', job.contract, sourceJob.contract),
+        duties: keepList(dutiesVal, job.duties, sourceJob.duties),
+        hard: keepList(hardVal, job.hard, sourceJob.hard),
+        pref: keepList(prefVal, job.pref, sourceJob.pref),
+        life: keepList(lifeVal, job.life, sourceJob.life),
+        benefits: sourceJob.benefits || [],
         status: job.status || 'draft',
         updatedAt: new Date().toISOString()
       };
@@ -291,34 +350,64 @@
     return '<article class="paperdoc">' +
       '<div class="pd-job-head"><div class="pd-job-logo">' + esc((job.project || '岗').slice(0, 1)) + '</div>' +
         '<div class="pd-job-id"><div class="pd-job-company">' + esc(job.project || '未填写项目') + '</div>' +
-          '<h1 class="pd-job-title">' + esc(job.title || '未命名岗位') + '<span>驻' + esc(job.country || '') + '</span></h1>' +
-          '<div class="pd-job-meta">' + esc(job.country || '') + ' · 招聘 ' + (job.headcount || 1) + ' 人 · 合同 ' + esc(job.contract || '—') + '</div>' +
-          '<div class="pd-chips" style="margin-top:6px"><span class="good">' + (job.status === 'published' ? '已发布' : '草稿') + '</span><span>企业岗位</span></div></div>' +
-        '<div class="pd-job-pay"><b>' + esc(job.salary || '面议') + '</b><span>' + (job.status === 'published' ? '招聘中' : '待发布') + '</span></div></div>' +
+          '<h1 class="pd-job-title">' + esc(job.title || '未命名岗位') + '<span>'+tr('驻')+esc(job.country || '')+'</span></h1>' +
+          '<div class="pd-job-meta">' + esc(job.country || '') + ' · '+tr('招聘')+' ' + (job.headcount || 1) + ' '+tr('人')+' · '+tr('合同')+' ' + esc(job.contract || '—') + '</div>' +
+          '<div class="pd-chips" style="margin-top:6px"><span class="good">' + tr(job.status === 'published' ? '已发布' : '草稿') + '</span><span>'+tr('企业岗位')+'</span></div></div>' +
+        '<div class="pd-job-pay"><b>' + esc(job.salary || '面议') + '</b><span>' + tr(job.status === 'published' ? '招聘中' : '待发布') + '</span></div></div>' +
       '<div class="pd-body"><div class="pd-main">' +
-        '<section class="pd-sec" data-hja-step="2"><h3>岗位职责</h3><ol class="pd-duty">' + (duties || '<li>待补充</li>') + '</ol>' + note(dutyIssue ? 'gap' : 'hit', dutyIssue ? '职责缺口' : '职责清晰', dutyIssue ? dutyIssue.fix : '岗位职责已覆盖主要工作内容。') + '</section>' +
-        '<section class="pd-sec" data-hja-step="3"><h3>任职要求</h3><div class="pd-req-t">硬性条件</div><ul class="pd-req-hard">' + (hard || '<li>待补充</li>') + '</ul>' +
-          (pref ? '<div class="pd-req-t">优先条件</div><ul class="pd-req-hard">' + pref + '</ul>' : '') + note(hardIssue ? 'gap' : 'hit', hardIssue ? '硬性要求不足' : '硬性要求明确', hardIssue ? hardIssue.fix : '硬性条件清晰，可用于初筛。') + '</section>' +
-        '<section class="pd-sec" data-hja-step="5"><h3>工作与生活</h3><ul class="pd-ul">' + (life || '<li>待补充</li>') + '</ul>' +
-          (benefits ? '<div class="pd-req-t">福利</div><ul class="pd-ul">' + benefits + '</ul>' : '') + note(lifeIssue ? 'gap' : 'hit', lifeIssue ? '生活信息不足' : '生活信息完整', lifeIssue ? lifeIssue.fix : '住宿、班车与福利信息可降低流失。') + '</section>' +
-        '<section class="pd-sec" data-hja-step="4"><h3>合同与手续</h3><div class="pd-kv wide"><span>合同周期</span><b>' + esc(job.contract || '—') + '</b></div><div class="pd-kv"><span>工作地点</span><b>' + esc(job.country || '—') + '</b></div>' + note(contractIssue ? 'gap' : 'hit', contractIssue ? '合同信息待补' : '合同信息完整', contractIssue ? contractIssue.fix : '合同周期与工作地点已明确。') + '</section>' +
+        '<section class="pd-sec" data-hja-step="2"><h3>'+tr('岗位职责')+'</h3><ol class="pd-duty">' + (duties || '<li>待补充</li>') + '</ol>' + note(dutyIssue ? 'gap' : 'hit', dutyIssue ? '职责缺口' : '职责清晰', dutyIssue ? dutyIssue.fix : '岗位职责已覆盖主要工作内容。') + '</section>' +
+        '<section class="pd-sec" data-hja-step="3"><h3>'+tr('任职要求')+'</h3><div class="pd-req-t">'+tr('硬性条件')+'</div><ul class="pd-req-hard">' + (hard || '<li>待补充</li>') + '</ul>' +
+          (pref ? '<div class="pd-req-t">'+tr('优先条件')+'</div><ul class="pd-req-hard">' + pref + '</ul>' : '') + note(hardIssue ? 'gap' : 'hit', hardIssue ? '硬性要求不足' : '硬性要求明确', hardIssue ? hardIssue.fix : '硬性条件清晰，可用于初筛。') + '</section>' +
+        '<section class="pd-sec" data-hja-step="5"><h3>'+tr('工作与生活')+'</h3><ul class="pd-ul">' + (life || '<li>待补充</li>') + '</ul>' +
+          (benefits ? '<div class="pd-req-t">'+tr('福利')+'</div><ul class="pd-ul">' + benefits + '</ul>' : '') + note(lifeIssue ? 'gap' : 'hit', lifeIssue ? '生活信息不足' : '生活信息完整', lifeIssue ? lifeIssue.fix : '住宿、班车与福利信息可降低流失。') + '</section>' +
+        '<section class="pd-sec" data-hja-step="4"><h3>'+tr('合同与手续')+'</h3><div class="pd-kv wide"><span>'+tr('合同周期')+'</span><b>' + esc(job.contract || '—') + '</b></div><div class="pd-kv"><span>'+tr('工作地点')+'</span><b>' + esc(job.country || '—') + '</b></div>' + note(contractIssue ? 'gap' : 'hit', contractIssue ? '合同信息待补' : '合同信息完整', contractIssue ? contractIssue.fix : '合同周期与工作地点已明确。') + '</section>' +
       '</div><aside class="pd-side">' +
-        '<section class="pd-sec"><h3>招聘信息</h3><div class="pd-kv"><span>招聘人数</span><b>' + (job.headcount || 1) + ' 人</b></div><div class="pd-kv"><span>状态</span><b>' + (job.status === 'published' ? '已发布' : '草稿') + '</b></div><div class="pd-kv"><span>项目</span><b>' + esc(job.project || '—') + '</b></div></section>' +
-        '<section class="pd-sec"><h3>岗位标签</h3><div class="pd-tags"><span class="strong">' + esc(job.title || '') + '</span><span>' + esc(job.country || '') + '</span><span>' + esc(job.contract || '') + '</span></div></section>' +
-        '<section class="pd-sec"><h3>下一步</h3><p class="pd-muted">先做 AI 诊断，确认职责/硬性要求/合规信息完整，再发布岗位。</p></section>' +
+        '<section class="pd-sec"><h3>'+tr('招聘信息')+'</h3><div class="pd-kv"><span>'+tr('招聘人数')+'</span><b>' + (job.headcount || 1) + ' 人</b></div><div class="pd-kv"><span>'+tr('状态')+'</span><b>' + tr(job.status === 'published' ? '已发布' : '草稿') + '</b></div><div class="pd-kv"><span>'+tr('项目')+'</span><b>' + esc(job.project || '—') + '</b></div></section>' +
+        '<section class="pd-sec"><h3>'+tr('岗位标签')+'</h3><div class="pd-tags"><span class="strong">' + esc(job.title || '') + '</span><span>' + esc(job.country || '') + '</span><span>' + esc(job.contract || '') + '</span></div></section>' +
+        '<section class="pd-sec"><h3>'+tr('下一步')+'</h3><p class="pd-muted">'+tr('先做 AI 诊断，确认职责/硬性要求/合规信息完整，再发布岗位。')+'</p></section>' +
       '</aside></div>' +
-      '<div class="pd-foot"><span>岗位编号 ' + esc(job.id || '—') + '</span><span>企业填写 · 平台结构化展示</span></div></article>';
+      '<div class="pd-foot"><span>'+tr('岗位编号')+' ' + esc(job.id || '—') + '</span><span>'+tr('企业填写 · 平台结构化展示')+'</span></div></article>';
+  }
+
+  function localizeJobContent(job, L) {
+    var fields = ['title','project','country','salary','contract'];
+    var lists = ['duties','hard','pref','life','benefits'];
+    var texts = [], seen = {};
+    function add(v){ if(typeof v==='string'&&v.trim()&&!seen[v]){seen[v]=1;texts.push(v);} }
+    fields.forEach(function(k){ add(job[k]); });
+    lists.forEach(function(k){ (job[k]||[]).forEach(add); });
+    if(!texts.length) return Promise.resolve(job);
+    var missing = texts.filter(function(t){ return !trCache[L+'|'+t]; });
+    var base = Promise.resolve();
+    if(missing.length){
+      base = fetch('/api/translate',{method:'POST',headers:{'content-type':'application/json','x-hp-request':'1'},body:JSON.stringify({texts:missing,target:L})}).then(function(r){return r.json();}).then(function(j){
+        if(j && j.texts) missing.forEach(function(t,i){ if(j.texts[i]) trCache[L+'|'+t]=j.texts[i]; });
+      }).catch(function(){});
+    }
+    return base.then(function(){
+      var o = Object.assign({}, job);
+      fields.forEach(function(k){ var v=trCache[L+'|'+o[k]]; if(v) o[k]=v; });
+      lists.forEach(function(k){ o[k]=(o[k]||[]).map(function(v){ return trCache[L+'|'+v] || v; }); });
+      return o;
+    });
   }
 
   function preview(job) {
+    var L = (window.HPI18N && HPI18N.lang && HPI18N.lang()) || 'zh';
+    if(L === 'zh' || !job){ renderPreview(job); return; }
+    localizeJobContent(job, L).then(function(j){ renderPreview(j); }).catch(function(){ renderPreview(job); });
+  }
+
+  function renderPreview(job) {
+
     var host = document.getElementById('jobPreviewHost');
     var listCard = document.getElementById('jobManageList') && document.getElementById('jobManageList').closest('.card');
     if (!host) return;
     host.innerHTML = '<div class="pf-preview">' +
-      '<div class="pf-preview-bar"><div><div class="eyebrow">JOB DESCRIPTION</div><h2>岗位预览 <span>' + (job.status === 'published' ? '已发布' : '草稿') + ' · ' + esc(job.country || '') + '</span></h2>' +
-        '<div class="pf-preview-meta"><span class="pf-pill ' + (job.status === 'published' ? 'good' : '') + '">' + (job.status === 'published' ? '已发布' : '草稿') + '</span><span class="pf-pill">招 ' + (job.headcount || 1) + ' 人</span><span class="pf-pill">' + esc(job.salary || '薪资待定') + '</span></div></div>' +
-        '<div class="pf-preview-acts"><button class="btn btn-o btn-sm" id="jpBack" type="button">返回列表</button><button class="btn btn-o btn-sm" id="jpEdit" type="button">编辑</button><button class="btn btn-o btn-sm" id="jpAI" type="button">AI 诊断</button><button class="btn ' + (job.status === 'published' ? 'btn-o' : 'btn-p') + ' btn-sm" id="jpPublish" type="button">' + (job.status === 'published' ? '取消发布' : '发布岗位') + '</button></div></div>' +
-      '<div class="pf-preview-note">AI 诊断基于当前保存版本；修改岗位后需要重新诊断。</div>' +
+      '<div class="pf-preview-bar"><div><div class="eyebrow">JOB DESCRIPTION</div><h2>'+tr('岗位预览')+' <span>' + tr(job.status === 'published' ? '已发布' : '草稿') + ' · ' + esc(job.country || '') + '</span></h2>' +
+        '<div class="pf-preview-meta"><span class="pf-pill ' + (job.status === 'published' ? 'good' : '') + '">' + tr(job.status === 'published' ? '已发布' : '草稿') + '</span><span class="pf-pill">'+tr('招')+' ' + (job.headcount || 1) + ' '+tr('人')+'</span><span class="pf-pill">' + esc(job.salary || '薪资待定') + '</span></div></div>' +
+        '<div class="pf-preview-acts"><button class="btn btn-o btn-sm" id="jpBack" type="button">'+tr('返回列表')+'</button><button class="btn btn-o btn-sm" id="jpEdit" type="button">'+tr('编辑')+'</button><button class="btn btn-o btn-sm" id="jpAI" type="button">'+tr('AI 诊断')+'</button><button class="btn ' + (job.status === 'published' ? 'btn-o' : 'btn-p') + ' btn-sm" id="jpPublish" type="button">' + tr(job.status === 'published' ? '取消发布' : '发布岗位') + '</button></div></div>' +
+      '<div class="pf-preview-note">'+tr('AI 诊断基于当前保存版本；修改岗位后需要重新诊断。')+'</div>' +
       '<div class="docwrap">' + paper(job) + '</div></div>';
     host.style.display = 'block';
     if (listCard) listCard.style.display = 'none';
@@ -331,16 +420,16 @@
 
   function publish(job, unpublish) {
     var next = !unpublish;
-    var msg = next ? '发布后，应聘者可在岗位发现中看到这个岗位。确认发布吗？' : '取消发布后，岗位将从应聘者端下架。确认取消吗？';
+    var msg = next ? tr('发布后，应聘者可在岗位发现中看到这个岗位。确认发布吗？') : tr('取消发布后，岗位将从应聘者端下架。确认取消吗？');
     HP.modal({
-      title: next ? '发布岗位' : '取消发布',
+      title: next ? tr('发布岗位') : tr('取消发布'),
       body: '<div style="font-size:13px;line-height:1.8;color:var(--text-2)">' + msg + '</div>',
-      actions: [{ text: '再想想' }, { text: next ? '确认发布' : '确认取消', primary: true, onClick: function (close) {
+      actions: [{ text: tr('再想想') }, { text: next ? tr('确认发布') : tr('确认取消'), primary: true, onClick: function (close) {
         close();
         job.status = next ? 'published' : 'draft';
         job.updatedAt = new Date().toISOString();
         save(); renderList(); preview(job);
-        toast(next ? '已发布' : '已取消发布', next ? '应聘者现在可以看到这个岗位' : '岗位已从应聘者端下架');
+        toast(next ? tr('已发布') : tr('已取消发布'), next ? tr('应聘者现在可以看到这个岗位') : tr('岗位已从应聘者端下架'));
         syncStatus(job, job.status).catch(function () { toast('仅本地', '后端同步失败，岗位状态已在本页生效'); });
       }}]
     });
@@ -348,9 +437,9 @@
 
   function remove(job) {
     HP.modal({
-      title: '删除岗位',
-      body: '<div style="font-size:13px;line-height:1.8">确定删除「' + esc(job.title) + '」吗？删除后不可恢复。</div>',
-      actions: [{ text: '取消' }, { text: '删除', primary: true, onClick: function (close) {
+      title: tr('删除岗位'),
+      body: '<div style="font-size:13px;line-height:1.8">'+tr('确定删除该岗位吗？删除后不可恢复。')+'</div>',
+      actions: [{ text: tr('取消') }, { text: tr('删除'), primary: true, onClick: function (close) {
         close();
         jobs = jobs.filter(function (x) { return x.id !== job.id; });
         save(); renderList();
@@ -359,7 +448,7 @@
         if (host) { host.style.display = 'none'; host.innerHTML = ''; }
         var card = document.getElementById('jobManageList') && document.getElementById('jobManageList').closest('.card');
         if (card) card.style.display = '';
-        toast('已删除', '岗位已移除');
+        toast(tr('已删除'), tr('岗位已移除'));
       }}]
     });
   }
@@ -419,7 +508,7 @@
     var duties = job.duties || [], hard = job.hard || [], pref = job.pref || [], life = job.life || [];
     function noteHTML(kind, title, text) {
       if (!annotate) return '';
-      return '<div class="hja-note ' + kind + ' pending"><b>' + esc(title) + '</b><span>' + esc(text) + '</span></div>';
+      return '<div class="hja-note ' + kind + ' pending"><b>' + esc(tr(title)) + '</b><span>' + esc(tr(text)) + '</span></div>';
     }
     function issueFor(re) { return issues.filter(function (x) { return re.test(x.title); })[0]; }
     var dutyIssue = issueFor(/职责/), hardIssue = issueFor(/硬性/), lifeIssue = issueFor(/生活|福利/), contractIssue = issueFor(/合同/), prefIssue = issueFor(/优先/);
@@ -448,8 +537,8 @@
         sec('02', '任职要求', 'REQUIREMENTS', 3, '<div class="hja-sheet-sub">硬性条件</div><ul class="hja-sheet-list">' + hardItems + '</ul><div class="hja-sheet-sub">优先条件</div><ul class="hja-sheet-list">' + prefItems + '</ul>' + noteHTML(hardIssue ? 'gap' : 'hit', hardIssue ? '硬性要求不足' : '硬性要求明确', hardIssue ? hardIssue.fix : '硬性条件清晰，可用于初筛。')) +
         sec('03', '工作与生活', 'LIFE', 5, '<ul class="hja-sheet-list">' + lifeItems + '</ul>' + noteHTML(lifeIssue ? 'gap' : 'hit', lifeIssue ? '生活信息不足' : '生活信息完整', lifeIssue ? lifeIssue.fix : '住宿、班车与福利信息可降低流失。')) +
       '</div><div class="hja-sheet-col">' +
-        sec('04', '招聘信息', 'HIRING', 1, '<div class="hja-sheet-kv"><span>招聘人数</span><b>' + (job.headcount || 1) + ' 人</b></div><div class="hja-sheet-kv"><span>状态</span><b>' + (job.status === 'published' ? '已发布' : '草稿') + '</b></div><div class="hja-sheet-kv"><span>项目</span><b>' + esc(job.project || '—') + '</b></div><div class="hja-sheet-kv"><span>岗位标签</span><b>' + esc(job.title || '—') + '</b></div>') +
-        sec('05', '合同与手续', 'CONTRACT', 4, '<div class="hja-sheet-kv"><span>合同周期</span><b>' + esc(job.contract || '—') + '</b></div><div class="hja-sheet-kv"><span>工作地点</span><b>' + esc(job.country || '—') + '</b></div>' + noteHTML(contractIssue ? 'gap' : 'hit', contractIssue ? '合同信息待补' : '合同信息完整', contractIssue ? contractIssue.fix : '合同周期与工作地点已明确。')) +
+        sec('04', '招聘信息', 'HIRING', 1, '<div class="hja-sheet-kv"><span>'+tr('招聘人数')+'</span><b>' + (job.headcount || 1) + ' 人</b></div><div class="hja-sheet-kv"><span>状态</span><b>' + (job.status === 'published' ? '已发布' : '草稿') + '</b></div><div class="hja-sheet-kv"><span>'+tr('项目')+'</span><b>' + esc(job.project || '—') + '</b></div><div class="hja-sheet-kv"><span>岗位标签</span><b>' + esc(job.title || '—') + '</b></div>') +
+        sec('05', '合同与手续', 'CONTRACT', 4, '<div class="hja-sheet-kv"><span>'+tr('合同周期')+'</span><b>' + esc(job.contract || '—') + '</b></div><div class="hja-sheet-kv"><span>工作地点</span><b>' + esc(job.country || '—') + '</b></div>' + noteHTML(contractIssue ? 'gap' : 'hit', contractIssue ? '合同信息待补' : '合同信息完整', contractIssue ? contractIssue.fix : '合同周期与工作地点已明确。')) +
         sec('06', '诊断下一步', 'NEXT', 6, '<div class="hja-sheet-next">先补齐职责、硬性要求与生活信息，再发布岗位；信息越完整，候选人匹配越准确。</div>' + (annotate && issues.length ? '<div class="hja-sheet-next" style="color:#f0c27b">当前 ' + issues.length + ' 项待补充，可在「编辑岗位」中一键生成。</div>' : '')) +
       '</div></div></div>';
   }
@@ -466,29 +555,29 @@
       ['生成建议', '输出完整度与补充建议']
     ];
     var stepHTML = steps.map(function (x, i) {
-      return '<div class="hja-step" data-step="' + (i + 1) + '"><i>' + String(i + 1).padStart(2, '0') + '</i><div><b>' + x[0] + '</b><span>' + x[1] + '</span></div></div>';
+      return '<div class="hja-step" data-step="' + (i + 1) + '"><i>' + String(i + 1).padStart(2, '0') + '</i><div><b>' + tr(x[0]) + '</b><span>' + tr(x[1]) + '</span></div></div>';
     }).join('');
     var missing = [];
-    if (!(job.duties || []).length) missing.push('职责');
-    if (!(job.hard || []).length) missing.push('硬性要求');
-    if (!(job.life || []).length) missing.push('工作与生活');
-    var warnHTML = missing.length ? '<div class="hja-warn">当前岗位信息不完整（' + missing.join(' / ') + '），建议先编辑或 AI 重新生成。<button id="hjaEditWarn" type="button">去编辑</button></div>' : '';
-    return '<div class="hja-head"><div><div class="hja-eyebrow">JOB INTELLIGENCE</div><h2>岗位 AI 诊断 <span>基于当前保存版本 · ' + esc(job.country || '') + '</span></h2></div><span class="hja-mode">规则引擎 · 当前版本</span></div>' +
-      '<div class="hja-shell"><aside class="hja-rail"><div class="hja-rail-h">诊断路径 <span>06 STEPS</span></div><div class="hja-rail-line"></div>' + stepHTML + '</aside>' +
+    if (!(job.duties || []).length) missing.push(tr('职责'));
+    if (!(job.hard || []).length) missing.push(tr('硬性要求'));
+    if (!(job.life || []).length) missing.push(tr('工作与生活'));
+    var warnHTML = missing.length ? '<div class="hja-warn">'+tr('当前岗位信息不完整')+'（' + missing.join(' / ') + '）'+tr('建议先编辑或 AI 重新生成。')+'<button id="hjaEditWarn" type="button">'+tr('去编辑')+'</button></div>' : '';
+    return '<div class="hja-head"><div><div class="hja-eyebrow">JOB INTELLIGENCE</div><h2>'+tr('岗位 AI 诊断')+' <span>'+tr('基于当前保存版本')+' · ' + esc(job.country || '') + '</span></h2></div><span class="hja-mode">'+tr('规则引擎 · 当前版本')+'</span></div>' +
+      '<div class="hja-shell"><aside class="hja-rail"><div class="hja-rail-h">'+tr('诊断路径')+' <span>06 STEPS</span></div><div class="hja-rail-line"></div>' + stepHTML + '</aside>' +
       '<div class="hja-stage">' + warnHTML + jobSheet(job, true) + '</div></div>' +
-      '<div class="hja-console"><div class="hja-sum"><span class="hja-ok">✓</span><span id="hjaSum">正在生成诊断…</span><b id="hjaScore">' + a.score + '</b><span class="hja-score-label">完整度</span></div>' +
-      '<div class="hja-acts"><button class="btn btn-o btn-sm" id="hjaReport" type="button">查看报告</button><button class="btn btn-o btn-sm" id="hjaEdit" type="button">编辑岗位</button><button class="btn ' + (job.status === 'published' ? 'btn-o' : 'btn-p') + ' btn-sm" id="hjaPublish" type="button">' + (job.status === 'published' ? '取消发布' : '发布岗位') + '</button></div></div>';
+      '<div class="hja-console"><div class="hja-sum"><span class="hja-ok">✓</span><span id="hjaSum">'+tr('正在生成诊断…')+'</span><b id="hjaScore">' + a.score + '</b><span class="hja-score-label">'+tr('完整度')+'</span></div>' +
+      '<div class="hja-acts"><button class="btn btn-o btn-sm" id="hjaReport" type="button">'+tr('查看报告')+'</button><button class="btn btn-o btn-sm" id="hjaEdit" type="button">'+tr('编辑岗位')+'</button><button class="btn ' + (job.status === 'published' ? 'btn-o' : 'btn-p') + ' btn-sm" id="hjaPublish" type="button">' + (job.status === 'published' ? '取消发布' : '发布岗位') + '</button></div></div>';
   }
 
   function showJobReport(job, a) {
     var issues = a.issues || [], strengths = a.strengths || [];
-    var body = '<div class="hja-report"><div class="hja-report-score"><div class="hja-ring" style="--p:' + a.score + '%"><b>' + a.score + '</b><span>完整度</span></div><div><div class="hja-verdict">' + (a.score >= 85 ? '可以发布' : a.score >= 70 ? '建议补齐后发布' : '先补齐关键信息') + '</div><p>岗位职责、硬性要求、薪资合同与生活信息越完整，候选人匹配越准确。</p></div></div>' +
-      '<div class="hja-report-cols"><div class="hja-report-block"><h4>优势 <span>' + strengths.length + '</span></h4><ul>' + (strengths.length ? strengths.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') : '<li>暂未识别到明显优势。</li>') + '</ul></div>' +
-      '<div class="hja-report-block"><h4>需要补充 <span>' + issues.length + '</span></h4>' + (issues.length ? issues.map(function (x) {
+    var body = '<div class="hja-report"><div class="hja-report-score"><div class="hja-ring" style="--p:' + a.score + '%"><b>' + a.score + '</b><span>完整度</span></div><div><div class="hja-verdict">' + tr(a.score >= 85 ? '可以发布' : a.score >= 70 ? '建议补齐后发布' : '先补齐关键信息') + '</div><p>'+tr('岗位职责、硬性要求、薪资合同与生活信息越完整，候选人匹配越准确。')+'</p></div></div>' +
+      '<div class="hja-report-cols"><div class="hja-report-block"><h4>'+tr('优势')+' <span>' + strengths.length + '</span></h4><ul>' + (strengths.length ? strengths.map(function (x) { return '<li>' + esc(tr(x)) + '</li>'; }).join('') : '<li>'+tr('暂未识别到明显优势。')+'</li>') + '</ul></div>' +
+      '<div class="hja-report-block"><h4>'+tr('需要补充')+' <span>' + issues.length + '</span></h4>' + (issues.length ? issues.map(function (x) {
         var lv = x.level === 'high' ? 'high' : x.level === 'medium' ? 'mid' : 'low';
-        return '<div class="hja-report-issue"><div><span class="lv ' + lv + '">' + (lv === 'high' ? '高优先级' : lv === 'mid' ? '建议优化' : '可补充') + '</span><b>' + esc(x.title) + '</b></div><p>' + esc(x.detail) + '</p><div class="hja-fix">→ ' + esc(x.fix) + '</div></div>';
-      }).join('') : '<div class="hja-ok-box">岗位信息比较完整，可以发布。</div>') + '</div></div></div>';
-    var close = HP.modal({ title: '岗位诊断报告', wide: true, body: body, actions: [{ text: '关闭', primary: true }] });
+        return '<div class="hja-report-issue"><div><span class="lv ' + lv + '">' + tr(lv === 'high' ? '高优先级' : lv === 'mid' ? '建议优化' : '可补充') + '</span><b>' + esc(tr(x.title)) + '</b></div><p>' + esc(tr(x.detail)) + '</p><div class="hja-fix">→ ' + esc(tr(x.fix)) + '</div></div>';
+      }).join('') : '<div class="hja-ok-box">'+tr('岗位信息比较完整，可以发布。')+'</div>') + '</div></div></div>';
+    var close = HP.modal({ title: tr('岗位诊断报告'), wide: true, body: body, actions: [{ text: tr('关闭'), primary: true }] });
     setTimeout(function () {
       var masks = document.querySelectorAll('.hp-modal-mask');
       var last = masks[masks.length - 1];
@@ -501,8 +590,8 @@
     ensureAudio();
     var wrap = document.createElement('div');
     wrap.id = 'hpJobAI';
-    wrap.innerHTML = '<div class="hp-aiflow-bar"><i class="dot"></i><b id="hjaTitle">岗位 AI 诊断 · 开机动画</b><span>基于当前保存版本</span><div class="acts"><button id="hjaVoice" type="button">音效 ON</button><button id="hjaSkip" type="button">跳过开机 →</button><button id="hjaClose" type="button">关闭 ×</button></div></div>' +
-      '<div class="hp-aiflow-loading" id="hjaLoading">正在启动诊断引擎…</div>' +
+    wrap.innerHTML = '<div class="hp-aiflow-bar"><i class="dot"></i><b id="hjaTitle">'+tr('岗位 AI 诊断 · 开机动画')+'</b><span>'+tr('基于当前保存版本')+'</span><div class="acts"><button id="hjaVoice" type="button">'+tr('音效 ON')+'</button><button id="hjaSkip" type="button">'+tr('跳过开机 →')+'</button><button id="hjaClose" type="button">'+tr('关闭 ×')+'</button></div></div>' +
+      '<div class="hp-aiflow-loading" id="hjaLoading">'+tr('正在启动诊断引擎…')+'</div>' +
       '<iframe class="hp-aiflow-frame" id="hjaFrame" allow="autoplay; fullscreen" src="demo/boot-embed.html?auto&mode=job&doc=' + encodeURIComponent(String((job && job.id) || 'JOB-2026-0011')) + '"></iframe>' +
       '<div class="hp-ai-data" id="hjaData" hidden></div>';
     document.body.appendChild(wrap);
@@ -608,7 +697,7 @@
         { k: '项目归属', v: job.project || '未填写', ok: !!job.project, tip: job.project ? '已关联' : '待补充' }
       ];
       var mapHTML = map.map(function (x) {
-        return '<div class="hjb-map-row"><span class="l">' + esc(x.k) + '</span><span class="v">' + esc(x.v) + '</span><span class="line ' + (x.ok ? 'ok' : 'gap') + '"><i></i></span><span class="st ' + (x.ok ? 'ok' : 'gap') + '">' + x.tip + '</span></div>';
+        return '<div class="hjb-map-row"><span class="l">' + esc(tr(x.k)) + '</span><span class="v">' + esc(tr(x.v)) + '</span><span class="line ' + (x.ok ? 'ok' : 'gap') + '"><i></i></span><span class="st ' + (x.ok ? 'ok' : 'gap') + '">' + tr(x.tip) + '</span></div>';
       }).join('');
       var breakdown = [
         ['职责完整度', 25, duties.length >= 4 ? 25 : duties.length ? 15 : 4],
@@ -620,23 +709,23 @@
       ];
       var breakdownHTML = breakdown.map(function (x) {
         var pct = x[1] ? Math.round(x[2] / x[1] * 100) : 0;
-        return '<div class="hjb-break"><span class="k">' + x[0] + '</span><span class="track"><i style="width:' + pct + '%"></i></span><span class="v">' + x[2] + ' / ' + x[1] + '</span></div>';
+        return '<div class="hjb-break"><span class="k">' + tr(x[0]) + '</span><span class="track"><i style="width:' + pct + '%"></i></span><span class="v">' + x[2] + ' / ' + x[1] + '</span></div>';
       }).join('');
       return '<div class="hjb-hero"><div class="hjb-score" style="--p:' + a.score + '"><b>' + a.score + '</b><span>完整度</span></div>' +
         '<div class="hjb-hero-main"><div class="hjb-badge">' + (a.score >= 85 ? '可以发布' : a.score >= 70 ? '建议补齐后发布' : '先补齐关键信息') + '</div>' +
-        '<h3>' + (a.score >= 85 ? '岗位信息比较完整' : '需要补齐关键信息') + '</h3>' +
+        '<h3>' + tr(a.score >= 85 ? '岗位信息比较完整' : '需要补齐关键信息') + '</h3>' +
         '<p>岗位职责、硬性要求、薪资合同与生活信息越完整，候选人匹配越准确。</p><div class="hjb-bars">' + bars + '</div></div></div>' +
-        '<section class="hjb-sec"><div class="hjb-sec-h"><span>01</span><b>岗位要素对照</b><em>JOB POST ELEMENTS</em></div><div class="hjb-map">' + mapHTML + '</div></section>' +
-        '<section class="hjb-sec"><div class="hjb-sec-h"><span>02</span><b>分数构成</b><em>BREAKDOWN</em></div><div class="hjb-breaks">' + breakdownHTML + '</div></section>' +
-        '<div class="hjb-two"><section class="hjb-sec"><div class="hjb-sec-h"><span>03</span><b>优势</b><em>STRENGTHS</em></div><ul class="hjb-list">' + (strengths.length ? strengths.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') : '<li>暂未识别到明显优势。</li>') + '</ul></section>' +
-        '<section class="hjb-sec"><div class="hjb-sec-h"><span>04</span><b>需要补充</b><em>TO IMPROVE</em></div>' + (issues.length ? issues.map(function (x) {
+        '<section class="hjb-sec"><div class="hjb-sec-h"><span>01</span><b>'+tr('岗位要素对照')+'</b><em>JOB POST ELEMENTS</em></div><div class="hjb-map">' + mapHTML + '</div></section>' +
+        '<section class="hjb-sec"><div class="hjb-sec-h"><span>02</span><b>'+tr('分数构成')+'</b><em>BREAKDOWN</em></div><div class="hjb-breaks">' + breakdownHTML + '</div></section>' +
+        '<div class="hjb-two"><section class="hjb-sec"><div class="hjb-sec-h"><span>03</span><b>'+tr('优势')+'</b><em>STRENGTHS</em></div><ul class="hjb-list">' + (strengths.length ? strengths.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') : '<li>'+tr('暂未识别到明显优势。')+'</li>') + '</ul></section>' +
+        '<section class="hjb-sec"><div class="hjb-sec-h"><span>04</span><b>'+tr('需要补充')+'</b><em>TO IMPROVE</em></div>' + (issues.length ? issues.map(function (x) {
           var lv = x.level === 'high' ? 'high' : x.level === 'medium' ? 'mid' : 'low';
-          return '<div class="hjb-issue"><div><span class="lv ' + lv + '">' + (lv === 'high' ? '高优先级' : lv === 'mid' ? '建议优化' : '可补充') + '</span><b>' + esc(x.title) + '</b></div><p>' + esc(x.detail) + '</p><div class="fix">→ ' + esc(x.fix) + '</div></div>';
-        }).join('') : '<div class="hjb-ok">岗位信息比较完整，可以发布。</div>') + '</section></div>';
+          return '<div class="hjb-issue"><div><span class="lv ' + lv + '">' + (lv === 'high' ? '高优先级' : lv === 'mid' ? '建议优化' : '可补充') + '</span><b>' + esc(tr(x.title)) + '</b></div><p>' + esc(tr(x.detail)) + '</p><div class="fix">→ ' + esc(tr(x.fix)) + '</div></div>';
+        }).join('') : '<div class="hjb-ok">'+tr('岗位信息比较完整，可以发布。')+'</div>') + '</section></div>';
     }
     function openReport() {
       var a = diagnoseJob(job);
-      var s = openScreen('<div class="hjb-report"><div class="hjb-top"><button class="hjb-back" id="hsBack" type="button">← 返回</button><h2>岗位诊断报告</h2><span class="hjb-sub">' + esc(job.title || '未命名岗位') + ' · ' + esc(job.project || '未填写项目') + '（' + esc(job.country || '—') + '）</span><span class="hjb-engine">规则引擎 · 当前版本</span><div class="hjb-top-acts"><button class="btn btn-o btn-sm" id="hsEdit" type="button">编辑岗位</button><button class="btn ' + (job.status === 'published' ? 'btn-o' : 'btn-p') + ' btn-sm" id="hsPublish" type="button">' + (job.status === 'published' ? '取消发布' : '发布岗位') + '</button></div></div>' +
+      var s = openScreen('<div class="hjb-report"><div class="hjb-top"><button class="hjb-back" id="hsBack" type="button">← 返回</button><h2>'+tr('岗位诊断报告')+'</h2><span class="hjb-sub">' + esc(job.title || '未命名岗位') + ' · ' + esc(job.project || '未填写项目') + '（' + esc(job.country || '—') + '）</span><span class="hjb-engine">'+tr('规则引擎 · 当前版本')+'</span><div class="hjb-top-acts"><button class="btn btn-o btn-sm" id="hsEdit" type="button">'+tr('编辑岗位')+'</button><button class="btn ' + (job.status === 'published' ? 'btn-o' : 'btn-p') + ' btn-sm" id="hsPublish" type="button">' + (job.status === 'published' ? '取消发布' : '发布岗位') + '</button></div></div>' +
         reportHTML(job, a) + '</div>');
       s.querySelector('#hsBack').onclick = closeScreen;
       s.querySelector('#hsEdit').onclick = function () { closeScreen(); openEdit(); };
@@ -656,34 +745,34 @@
       }
       var sugHTML = issues.length ? issues.map(function (x) {
         var target = targetFor(x.title);
-        return '<div class="hja-sug-item"><b>' + esc(x.title) + '</b><p>' + esc(x.fix) + '</p><button type="button" data-target="' + target + '" data-fix="' + esc(x.fix) + '">采用建议</button></div>';
+        return '<div class="hja-sug-item"><b>' + esc(tr(x.title)) + '</b><p>' + esc(tr(x.fix)) + '</p><button type="button" data-target="' + target + '" data-fix="' + esc(tr(x.fix)) + '">采用建议</button></div>';
       }).join('') : '<div class="hja-sug-item"><b>当前没有明显缺口</b><p>可以微调表达后重新生成。</p></div>';
       var s = openScreen('<div class="hje">' +
-        '<div class="hje-top"><button class="hje-back" id="heBack" type="button">← 返回</button><h2>编辑岗位</h2><span>保存后可重新分析，查看分数变化</span><div class="hje-top-acts"><button class="btn btn-o btn-sm" id="heGen" type="button">AI 重新生成</button></div></div>' +
-        '<div class="hje-tip">岗位中<b>所有信息均可修改</b>。AI 只在你已有内容的基础上帮你表达得更清楚，不会替你编造职责或要求。</div>' +
-        '<section class="hje-sec"><div class="hje-sec-h"><span>01</span><b>基本信息</b><em>点击任意字段即可修改</em></div><div class="hje-grid2">' +
-          '<div class="hje-frow"><span>岗位名称</span><input id="heTitle" value="' + esc(job.title || '') + '"></div>' +
-          '<div class="hje-frow"><span>国家</span><input id="heCountry" value="' + esc(job.country || '') + '"></div>' +
+        '<div class="hje-top"><button class="hje-back" id="heBack" type="button">← 返回</button><h2>'+tr('编辑岗位')+'</h2><span>'+tr('保存后可重新分析，查看分数变化')+'</span><div class="hje-top-acts"><button class="btn btn-o btn-sm" id="heGen" type="button">'+tr('AI 重新生成')+'</button></div></div>' +
+        '<div class="hje-tip">'+tr('岗位中所有信息均可修改。AI 只在你已有内容的基础上帮你表达得更清楚，不会替你编造职责或要求。')+'</div>' +
+        '<section class="hje-sec"><div class="hje-sec-h"><span>01</span><b>'+tr('基本信息')+'</b><em>'+tr('点击任意字段即可修改')+'</em></div><div class="hje-grid2">' +
+          '<div class="hje-frow"><span>'+tr('岗位名称')+'</span><input id="heTitle" value="' + esc(job.title || '') + '"></div>' +
+          '<div class="hje-frow"><span>'+tr('国家')+'</span><input id="heCountry" value="' + esc(job.country || '') + '"></div>' +
           '<div class="hje-frow"><span>项目</span><input id="heProject" value="' + esc(job.project || '') + '"></div>' +
           '<div class="hje-frow"><span>合同周期</span><input id="heContract" value="' + esc(job.contract || '') + '"></div>' +
           '<div class="hje-frow"><span>招聘人数</span><input id="heHead" type="number" value="' + (job.headcount || 1) + '"></div>' +
-          '<div class="hje-frow"><span>薪资</span><input id="heSalary" value="' + esc(job.salary || '') + '"></div>' +
+          '<div class="hje-frow"><span>'+tr('薪资')+'</span><input id="heSalary" value="' + esc(job.salary || '') + '"></div>' +
         '</div></section>' +
-        '<section class="hje-sec"><div class="hje-sec-h"><span>02</span><b>岗位职责</b><em>每行一条 · 影响候选人判断</em></div>' +
+        '<section class="hje-sec"><div class="hje-sec-h"><span>02</span><b>'+tr('岗位职责')+'</b><em>'+tr('每行一条 · 影响候选人判断')+'</em></div>' +
           '<textarea class="hje-ta" id="heDuties" rows="5">' + esc((job.duties || []).join('\n')) + '</textarea>' +
-          '<div class="hje-tools"><button class="fbtn" type="button" data-polish="heDuties">AI 润色这段</button><span class="hje-cnt"></span></div></section>' +
-        '<section class="hje-sec"><div class="hje-sec-h"><span>03</span><b>任职要求</b><em>硬性 / 优先分开写</em></div>' +
-          '<div class="hje-sub">硬性条件</div><textarea class="hje-ta" id="heHard" rows="3">' + esc((job.hard || []).join('\n')) + '</textarea>' +
+          '<div class="hje-tools"><button class="fbtn" type="button" data-polish="heDuties">'+tr('AI 润色这段')+'</button><span class="hje-cnt"></span></div></section>' +
+        '<section class="hje-sec"><div class="hje-sec-h"><span>03</span><b>'+tr('任职要求')+'</b><em>'+tr('硬性 / 优先分开写')+'</em></div>' +
+          '<div class="hje-sub">'+tr('硬性条件')+'</div><textarea class="hje-ta" id="heHard" rows="3">' + esc((job.hard || []).join('\n')) + '</textarea>' +
           '<div class="hje-tools"><button class="fbtn" type="button" data-polish="heHard">AI 润色这段</button><span class="hje-cnt"></span></div>' +
-          '<div class="hje-sub">优先条件</div><textarea class="hje-ta" id="hePref" rows="2">' + esc((job.pref || []).join('\n')) + '</textarea>' +
+          '<div class="hje-sub">'+tr('优先条件')+'</div><textarea class="hje-ta" id="hePref" rows="2">' + esc((job.pref || []).join('\n')) + '</textarea>' +
           '<div class="hje-tools"><button class="fbtn" type="button" data-polish="hePref">AI 润色这段</button><span class="hje-cnt"></span></div></section>' +
-        '<section class="hje-sec"><div class="hje-sec-h"><span>04</span><b>工作与生活</b><em>住宿、班车、探亲假</em></div>' +
+        '<section class="hje-sec"><div class="hje-sec-h"><span>04</span><b>'+tr('工作与生活')+'</b><em>'+tr('住宿、班车、探亲假')+'</em></div>' +
           '<textarea class="hje-ta" id="heLife" rows="3">' + esc((job.life || []).join('\n')) + '</textarea>' +
           '<div class="hje-tools"><button class="fbtn" type="button" data-polish="heLife">AI 润色这段</button><span class="hje-cnt"></span></div></section>' +
-        '<section class="hje-sec"><div class="hje-sec-h"><span>05</span><b>诊断建议</b><em>点「采用建议」写进对应字段</em></div>' +
+        '<section class="hje-sec"><div class="hje-sec-h"><span>05</span><b>'+tr('诊断建议')+'</b><em>'+tr('点「采用建议」写进对应字段')+'</em></div>' +
           '<div class="hje-sug-list">' + sugHTML + '</div>' +
-          '<button class="hje-gen" id="heGenerate" type="button">AI 重新生成岗位内容</button></section>' +
-        '<div class="hje-foot"><button class="btn btn-p" id="heRegen" type="button">保存并重新分析</button><button class="btn btn-o" id="heSave" type="button">保存草稿</button><button class="btn btn-o" id="heCancel" type="button">取消</button></div>' +
+          '<button class="hje-gen" id="heGenerate" type="button">'+tr('AI 重新生成岗位内容')+'</button></section>' +
+        '<div class="hje-foot"><button class="btn btn-p" id="heRegen" type="button">'+tr('保存并重新分析')+'</button><button class="btn btn-o" id="heSave" type="button">'+tr('保存草稿')+'</button><button class="btn btn-o" id="heCancel" type="button">'+tr('取消')+'</button></div>' +
       '</div>');
       function generateIntoForm() {
         var title = (document.getElementById('heTitle') || {}).value || job.title || '';
@@ -772,7 +861,7 @@
       try { if (frame.contentWindow && frame.contentWindow.speechSynthesis) frame.contentWindow.speechSynthesis.cancel(); } catch (e) {}
       title.textContent = '岗位 AI 诊断';
       skip.style.display = '';
-      skip.textContent = '重新分析';
+      skip.textContent = tr('重新分析');
       skip.onclick = function () { close(); diagnose(job); };
       try { if (frame.contentWindow && frame.contentWindow.speechSynthesis) frame.contentWindow.speechSynthesis.cancel(); } catch (e) {}
       frame.style.display = 'none';

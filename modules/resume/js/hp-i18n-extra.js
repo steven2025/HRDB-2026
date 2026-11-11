@@ -150,7 +150,8 @@
       if (!el.__zhAttr) el.__zhAttr = {};
       if (el.__zhAttr[attr] == null) el.__zhAttr[attr] = v;
       var key = el.__zhAttr[attr];
-      var out = lang() === 'zh' ? key : (EN[key] || key);
+      var out = key;
+      if (lang() !== 'zh') { try { var tv = window.HPI18N && HPI18N.t ? HPI18N.t(key) : ''; out = (tv && tv !== key) ? tv : (EN[key] || key); } catch (e) { out = EN[key] || key; } }
       if (el.getAttribute(attr) !== out) el.setAttribute(attr, out);
     });
   }
@@ -188,13 +189,13 @@
     });
   });
 
-  function start() {
-    walk(document.body);
-    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
-    document.addEventListener('hp:lang', function () { setTimeout(retranslateAll, 60); });
-  }
+  function start() { /* DOM 翻译已停用：避免把目标语言覆盖成英文；只保留 hpT 和词典。 */ }
 
-  window.hpT = function (zh) { return lang() === 'zh' ? zh : (EN[zh] || zh); };
+  window.hpT = function (zh) {
+    if (lang() === 'zh') return zh;
+    try { var tv = window.HPI18N && HPI18N.t ? HPI18N.t(zh) : ''; if (tv && tv !== zh) return tv; } catch (e) {}
+    return EN[zh] || zh;
+  };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();

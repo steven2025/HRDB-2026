@@ -4,6 +4,7 @@
    ================================================================== */
 (function () {
   'use strict';
+  function T(s){ try { return (window.HPI18N && HPI18N.t) ? (HPI18N.t(s) || s) : s; } catch(e){ return s; } }
 
   var DEMO = [
     { id: 1, name: '张*伟', job: '压机操作', country: '阿尔及利亚', score: 86, risk: '中', state: 'main', src: 'auto', inAt: '3 天前', dims: [92, 85, 88, 52, 70],
@@ -340,39 +341,39 @@
     var cur = VIEWS.filter(function (v) { return v.k === state.view; })[0] || VIEWS[1];
     return '<div class="hpp-bar">' +
       '<div class="hpp-seg">' +
-        '<button data-tab="main" class="' + (state.tab === 'main' ? 'on' : '') + '">主库 ' + c.main + '</button>' +
-        '<button data-tab="clean" class="' + (state.tab === 'clean' ? 'on' : '') + '">待清理 ' + c.clean + '</button>' +
-        '<button data-tab="trash" class="' + (state.tab === 'trash' ? 'on' : '') + '">回收站 ' + c.trash + '</button>' +
+        '<button data-tab="main" class="' + (state.tab === 'main' ? 'on' : '') + '">'+T('主库')+' ' + c.main + '</button>' +
+        '<button data-tab="clean" class="' + (state.tab === 'clean' ? 'on' : '') + '">'+T('待清理')+' ' + c.clean + '</button>' +
+        '<button data-tab="trash" class="' + (state.tab === 'trash' ? 'on' : '') + '">'+T('回收站')+' ' + c.trash + '</button>' +
       '</div>' +
-      '<input id="hppQ" placeholder="搜姓名 / 岗位 / 国家" value="' + esc(state.q) + '">' +
-      '<button class="hpp-btn" id="hppVbtn">' + cur.ic + ' ' + cur.n + '</button>' +
+      '<input id="hppQ" placeholder="'+T('搜姓名 / 岗位 / 国家')+'" value="' + esc(state.q) + '">' +
+      '<button class="hpp-btn" id="hppVbtn">' + cur.ic + ' ' + T(cur.n) + '</button>' +
       '<select class="hpp-sort" id="hppJob" title="按岗位算分" style="max-width:190px">' +
-        '<option value="">全部岗位（最近分析）</option>' +
+        '<option value="">'+T('全部岗位（最近分析）')+'</option>' +
         jobs.map(function (j) { return '<option value="' + esc(j.id) + '"' + (state.jobId === j.id ? ' selected' : '') + '>' + esc((j.title || '') + (j.country ? ' · ' + j.country : '')) + '</option>'; }).join('') +
       '</select>' +
       '<select class="hpp-sort" id="hppSort" title="排序方式">' +
-        '<option value="score"' + (state.sort === 'score' ? ' selected' : '') + '>匹配分 ↓</option>' +
-        '<option value="scoreAsc"' + (state.sort === 'scoreAsc' ? ' selected' : '') + '>匹配分 ↑</option>' +
-        '<option value="recent"' + (state.sort === 'recent' ? ' selected' : '') + '>最近入库</option>' +
-        '<option value="name"' + (state.sort === 'name' ? ' selected' : '') + '>姓名</option>' +
+        '<option value="score"' + (state.sort === 'score' ? ' selected' : '') + '>'+T('匹配分 ↓')+'</option>' +
+        '<option value="scoreAsc"' + (state.sort === 'scoreAsc' ? ' selected' : '') + '>'+T('匹配分 ↑')+'</option>' +
+        '<option value="recent"' + (state.sort === 'recent' ? ' selected' : '') + '>'+T('最近入库')+'</option>' +
+        '<option value="name"' + (state.sort === 'name' ? ' selected' : '') + '>'+T('姓名')+'</option>' +
       '</select>' +
-      '<button class="hpp-btn ' + (state.preview ? 'on' : '') + '" id="hppPbtn">预览窗格</button>' +
-      '<button class="hpp-btn ' + (state.showFilters || fcount() ? 'on' : '') + '" id="hppFbtn">筛选' + (fcount() ? ' <b>' + fcount() + '</b>' : '') + ' ▾</button>' +
-      (fcount() ? '<button class="hpp-btn" data-clear>清空</button>' : '') +
+      '<button class="hpp-btn ' + (state.preview ? 'on' : '') + '" id="hppPbtn">'+T('预览窗格')+'</button>' +
+      '<button class="hpp-btn ' + (state.showFilters || fcount() ? 'on' : '') + '" id="hppFbtn">'+T('筛选')+'' + (fcount() ? ' <b>' + fcount() + '</b>' : '') + ' ▾</button>' +
+      (fcount() ? '<button class="hpp-btn" data-clear>'+T('清空')+'</button>' : '') +
       '<span class="sp"></span>' +
-      '<button class="hpp-btn" id="hppRefresh">刷新</button>' +
+      '<button class="hpp-btn" id="hppRefresh">'+T('刷新')+'</button>' +
       '<div class="hpp-menu" id="hppMenu">' +
         VIEWS.map(function (v) {
           return '<button data-view="' + v.k + '" class="' + (v.k === state.view ? 'on' : '') + '">' +
-            '<span style="width:22px">' + v.ic + '</span><span>' + v.n + '</span>' +
+            '<span style="width:22px">' + v.ic + '</span><span>'+T(v.n)+'</span>' +
             '<span class="tick">' + (v.k === state.view ? '●' : '') + '</span></button>';
         }).join('') +
         '<div style="height:1px;background:var(--border);margin:6px 4px"></div>' +
         '<button data-pane="detail">' +
-          '<span style="width:22px">▭</span><span>详细信息窗格</span>' +
+          '<span style="width:22px">▭</span><span>'+T('详细信息窗格')+'</span>' +
           '<span class="tick">' + (state.detailPane ? '●' : '') + '</span></button>' +
         '<button data-pane="preview">' +
-          '<span style="width:22px">▯</span><span>预览窗格</span>' +
+          '<span style="width:22px">▯</span><span>'+T('预览窗格')+'</span>' +
           '<span class="tick">' + (state.preview ? '●' : '') + '</span></button>' +
       '</div>' +
     '</div>';
@@ -390,8 +391,8 @@
   function filterRows() {
     return FILTER_ROWS.map(function (r) {
       var cur = state.F[r.k];
-      return '<div class="hpp-frow"><span class="lab">' + r.lab + '</span>' +
-        '<button class="hpp-fchip ' + (cur === '' ? 'on' : '') + '" data-fk="' + r.k + '" data-fv="">全部</button>' +
+      return '<div class="hpp-frow"><span class="lab">' + T(r.lab) + '</span>' +
+        '<button class="hpp-fchip ' + (cur === '' ? 'on' : '') + '" data-fk="' + r.k + '" data-fv="">'+T('全部')+'</button>' +
         r.opts.map(function (o) {
           return '<button class="hpp-fchip ' + (cur === o[0] ? 'on' : '') + '" data-fk="' + r.k + '" data-fv="' + o[0] + '">' + o[1] + '</button>';
         }).join('') +
@@ -419,19 +420,19 @@
     return { list: all.slice(start, start + PAGE_SIZE), total: all.length, pages: pages, page: state.page };
   }
   function pagerHtml(pg) {
-    if (pg.pages <= 1) return pg.total ? '<div class="hpp-pagerbar"><span>共 ' + pg.total + ' 人</span></div>' : '';
+    if (pg.pages <= 1) return pg.total ? '<div class="hpp-pagerbar"><span>'+T('共')+' ' + pg.total + ' '+T('人')+'</span></div>' : '';
     var from = Math.max(1, pg.page - 2), to = Math.min(pg.pages, from + 4);
     from = Math.max(1, to - 4);
     var nums = '';
     for (var i = from; i <= to; i++) nums += '<button data-pg="' + i + '" class="' + (i === pg.page ? 'on' : '') + '">' + i + '</button>';
     return '<div class="hpp-pagerbar">' +
-      '<span>共 ' + pg.total + ' 人 · 第 ' + pg.page + ' / ' + pg.pages + ' 页</span>' +
-      '<button data-pg="' + (pg.page - 1) + '"' + (pg.page === 1 ? ' disabled' : '') + '>上一页</button>' + nums +
-      '<button data-pg="' + (pg.page + 1) + '"' + (pg.page === pg.pages ? ' disabled' : '') + '>下一页</button></div>';
+      '<span>'+T('共')+' ' + pg.total + ' '+T('人')+' · '+T('第')+' ' + pg.page + ' / ' + pg.pages + '</span>' +
+      '<button data-pg="' + (pg.page - 1) + '"' + (pg.page === 1 ? ' disabled' : '') + '>'+T('上一页')+'</button>' + nums +
+      '<button data-pg="' + (pg.page + 1) + '"' + (pg.page === pg.pages ? ' disabled' : '') + '>'+T('下一页')+'</button></div>';
   }
   function bodyHtml() {
     var all = rows();
-    if (!all.length) return '<div class="hpp-empty">' + (state.tab === 'trash' ? '回收站是空的' : '没有符合条件的候选人') + '</div>';
+    if (!all.length) return '<div class="hpp-empty">' + (state.tab === 'trash' ? T('回收站是空的') : T('没有符合条件的候选人')) + '</div>';
     var pg = pageOf(all);
     var rs = pg.list;
 
@@ -443,7 +444,7 @@
         var rt = x.risk === '高' ? 'bad' : x.risk === '中' ? 'warn' : 'ok';
         return '<div class="hpp-tile ' + (state.sel === x.id ? 'on' : '') + '" data-id="' + x.id + '">' +
           '<span class="nm">' + esc(x.name) + '</span>' +
-          '<span class="m">' + esc(x.job) + ' · <span class="hpp-tag ' + rt + '">' + esc(x.risk) + '</span></span>' +
+          '<span class="m">' + esc(T(x.job)) + ' · <span class="hpp-tag ' + rt + '">' + esc(T(x.risk)) + '</span></span>' +
           '<span class="sc">' + x.score + '</span></div>';
       }).join('') + '</div>' + pagerHtml(pg);
     }
@@ -452,7 +453,7 @@
       return '<div class="hpp-content">' + rs.map(function (x) {
         return '<div class="row" data-id="' + x.id + '">' +
           '<span class="nm">' + esc(x.name) + '</span>' +
-          '<span class="m">' + esc(x.job) + ' · ' + esc(x.country) + ' · ' + esc(x.inAt) + '</span>' +
+          '<span class="m">' + esc(T(x.job)) + ' · ' + esc(T(x.country)) + ' · ' + esc(T(x.inAt)) + '</span>' +
           '<span class="sc">' + x.score + ' 分</span></div>';
       }).join('') + '</div>' + pagerHtml(pg);
     }
@@ -464,9 +465,9 @@
       var rt = x.risk === '高' ? 'bad' : x.risk === '中' ? 'warn' : 'ok';
       return '<div class="hpp-card ' + (state.sel === x.id ? 'on' : '') + '" data-id="' + x.id + '">' +
         '<div class="top"><span class="nm">' + esc(x.name) + '</span>' +
-          '<span class="hpp-tag ' + rt + '">' + esc(x.risk) + '</span>' +
+          '<span class="hpp-tag ' + rt + '">' + esc(T(x.risk)) + '</span>' +
           '<span class="sc">' + x.score + '</span></div>' +
-        '<div class="sub">' + esc(x.job) + ' · ' + esc(x.country) + '</div>' +
+        '<div class="sub">' + esc(T(x.job)) + ' · ' + esc(T(x.country)) + '</div>' +
         d.slice(0, dimN).map(function (v, i) {
           return '<div class="dim"><div class="l"><span>' + DIMS[i] + '</span><b>' + v + '</b></div>' +
             '<div class="t"><i style="width:' + v + '%"></i></div></div>';
@@ -484,10 +485,10 @@
       var ops = state.tab === 'trash'
         ? '<button class="hpp-act" data-restore="' + x.id + '">恢复</button>'
         : '<button class="hpp-act" data-del="' + x.id + '">删除</button>';
-      var cells = '<td>' + esc(x.name) + '</td><td>' + esc(x.job) + '</td><td>' + esc(x.country) + '</td><td>' + x.score + ' 分</td>';
+      var cells = '<td>' + esc(x.name) + '</td><td>' + esc(T(x.job)) + '</td><td>' + esc(T(x.country)) + '</td><td>' + x.score + ' 分</td>';
       if (full) cells += '<td style="color:var(--text-3)">' + (x.dims || []).join(' / ') + '</td>';
-      cells += '<td><span class="hpp-tag ' + rt + '">' + esc(x.risk) + '</span></td>';
-      if (full) cells += '<td><span class="hpp-tag">' + (x.src === 'auto' ? '自动' : '手动') + '</span></td><td style="color:var(--text-3)">' + esc(x.inAt) + '</td>';
+      cells += '<td><span class="hpp-tag ' + rt + '">' + esc(T(x.risk)) + '</span></td>';
+      if (full) cells += '<td><span class="hpp-tag">' + T(x.src === 'auto' ? '自动' : '手动') + '</span></td><td style="color:var(--text-3)">' + esc(T(x.inAt)) + '</td>';
       cells += '<td style="text-align:right">' + ops + '</td>';
       return '<tr data-id="' + x.id + '" class="' + (state.sel === x.id ? 'on' : '') + '">' + cells + '</tr>';
     }).join('');
@@ -590,12 +591,12 @@
     var x = list.filter(function (y) { return y.id === state.sel; })[0];
     if (!x) return '';
     return '<div class="hpp-detailbar"><span>姓名 <b>' + esc(x.name) + '</b></span>' +
-      '<span>岗位 <b>' + esc(x.job) + '</b></span>' +
-      '<span>国家 <b>' + esc(x.country) + '</b></span>' +
-      '<span>匹配 <b>' + x.score + ' 分</b></span>' +
-      '<span>风险 <b>' + esc(x.risk) + '</b></span>' +
-      '<span>五维 <b>' + (x.dims || []).join(' / ') + '</b></span>' +
-      '<span>入库 <b>' + esc(x.inAt) + '</b></span></div>';
+      '<span>'+T('岗位')+' <b>' + esc(T(x.job)) + '</b></span>' +
+      '<span>'+T('国家')+' <b>' + esc(T(x.country)) + '</b></span>' +
+      '<span>'+T('匹配')+' <b>' + x.score + ' 分</b></span>' +
+      '<span>'+T('风险')+' <b>' + esc(T(x.risk)) + '</b></span>' +
+      '<span>'+T('五维')+' <b>' + (x.dims || []).join(' / ') + '</b></span>' +
+      '<span>'+T('入库')+' <b>' + esc(T(x.inAt)) + '</b></span></div>';
   }
 
   var resumeCache = {};
@@ -608,10 +609,10 @@
     var tab = state.dtab || 'analysis';
 
     var head = '<div class="hpp-dh"><div><div class="n">' + esc(x.name) + '</div>' +
-      '<div class="s">' + esc(x.job) + ' · ' + esc(x.country) + '</div></div>' +
+      '<div class="s">' + esc(T(x.job)) + ' · ' + esc(T(x.country)) + '</div></div>' +
       '<button class="hpp-x" data-close>✕</button></div>' +
       '<div class="hpp-dtabs">' + Object.keys(RTAB).map(function (k) {
-        return '<button data-dtab="' + k + '" class="' + (tab === k ? 'on' : '') + '">' + RTAB[k] + '</button>';
+        return '<button data-dtab="' + k + '" class="' + (tab === k ? 'on' : '') + '">' + T(RTAB[k]) + '</button>';
       }).join('') + '</div>';
 
     var dims = x.dims || [70, 70, 70, 60, 60];
@@ -619,18 +620,18 @@
     d.innerHTML = head +
       '<div style="display:flex;align-items:flex-end;gap:10px;margin-top:14px">' +
         '<div class="hpp-big">' + x.score + '<small>分</small></div>' +
-        '<div style="font-size:12.5px;color:var(--text-3)">风险 ' + esc(x.risk) + ' · ' + (x.src === 'auto' ? '自动入库' : '手动上传') + '</div>' +
+        '<div style="font-size:12.5px;color:var(--text-3)">风险 ' + esc(T(x.risk)) + ' · ' + T(x.src === 'auto' ? '自动入库' : '手动上传') + '</div>' +
       '</div>' +
-      '<div class="hpp-h5">五维得分</div>' +
+      '<div class="hpp-h5">'+T('五维得分')+'</div>' +
       dims.map(function (v, i) {
         return '<div class="hpp-dim"><div class="l"><span>' + DIMS[i] + '</span><b>' + v + '</b></div>' +
           '<div class="t"><i style="width:' + v + '%"></i></div></div>';
       }).join('') +
-      (pros.length ? '<div class="hpp-h5">优势</div>' + pros.map(function (t) {
-        return '<div class="hpp-li g"><i></i><span>' + esc(t) + '</span></div>';
+      (pros.length ? '<div class="hpp-h5">'+T('优势')+'</div>' + pros.map(function (t) {
+        return '<div class="hpp-li g"><i></i><span>' + esc(T(t)) + '</span></div>';
       }).join('') : '') +
-      (cons.length ? '<div class="hpp-h5">不足</div>' + cons.map(function (t) {
-        return '<div class="hpp-li w"><i></i><span>' + esc(t) + '</span></div>';
+      (cons.length ? '<div class="hpp-h5">'+T('不足')+'</div>' + cons.map(function (t) {
+        return '<div class="hpp-li w"><i></i><span>' + esc(T(t)) + '</span></div>';
       }).join('') : '') +
       '<div class="hpp-acts2"><button data-no>不推荐</button><button class="p" data-yes>推荐面试</button></div>';
 
@@ -809,7 +810,7 @@
       '<div class="aiw">' + sections + '</div>';
 
     var hint = document.getElementById('hpmHint');
-    if (hint) hint.textContent = '共 ' + d.pages.length + ' 个板块 · 向下滑动查看完整简历';
+    if (hint) hint.textContent = T('共')+' ' + d.pages.length + ' '+T('个板块 · 向下滑动查看完整简历');
   }
 
   function move(host, id, to) {

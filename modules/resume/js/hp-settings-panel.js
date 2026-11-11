@@ -82,6 +82,10 @@
     '<label class="hps-row"><input type="checkbox" class="hps-boot">跳过开机动画</label>' +
     '<label class="hps-row"><input type="checkbox" class="hps-reason">跳过推理分析过程</label>' +
     '<label class="hps-row"><input type="checkbox" class="hps-block">缺必填时禁止投递</label>' +
+    '<div class="hps-t" id="hpsTransTitle" style="margin-top:14px">语言 / 翻译</div>' +
+    '<div class="hps-l" style="font-size:10.5px;color:var(--text-3)">版本 2026-11-11 · i18n</div>' +
+    '<div class="hps-l" id="hpsTransRow">当前：中文原文</div>' +
+    '<button class="hps-reset" id="hpsTransOriginal" style="margin-bottom:10px">查看原文</button>' +
     '<button class="hps-reset">恢复默认</button>';
 
   function sync(panel) {
@@ -94,6 +98,16 @@
       cur.textContent = hit ? (hit[1] + ' · ' + Math.round(S.zoom * 100) + '%') : (Math.round(S.zoom * 100) + '%');
     }
     panel.querySelector('.hps-boot').checked = !!S.skipBoot;
+    try {
+      var L = (window.HPI18N && HPI18N.lang && HPI18N.lang()) || 'zh';
+      var row = panel.querySelector('#hpsTransRow');
+      var ob = panel.querySelector('#hpsTransOriginal');
+      var names = { zh: '中文原文', en: 'English', ja: '日本語', th: 'ไทย', ar: 'العربية', fr: 'Français' };
+      var ttl = panel.querySelector('#hpsTransTitle');
+      if (ttl) ttl.textContent = HPI18N.t('语言 / 翻译');
+      if (row) row.textContent = L === 'zh' ? (HPI18N.t('当前') + '：' + HPI18N.t('中文原文')) : (HPI18N.t('当前') + '：' + HPI18N.t('机器翻译') + ' · ' + (names[L] || L));
+      if (ob) { ob.textContent = L === 'zh' ? HPI18N.t('当前已是原文') : HPI18N.t('查看原文'); ob.disabled = L === 'zh'; ob.style.display = ''; ob.style.opacity = L === 'zh' ? '.55' : ''; }
+    } catch (e) {}
     panel.querySelector('.hps-block').checked = !!S.hardBlock;
     panel.querySelector('.hps-reason').checked = !!S.skipReason;
   }
@@ -141,6 +155,8 @@
       S.hardBlock = e.target.checked; save(); apply();
       if (window.demoToast) demoToast(e.target.checked ? '已开启：缺必填禁止投递' : '已关闭：缺项可投递');
     };
+    var ob = panel.querySelector('#hpsTransOriginal');
+    if (ob) ob.onclick = function () { try { HPI18N.set('zh'); } catch (e) {} };
     panel.querySelector('.hps-reset').onclick = function () {
       S = Object.assign({}, DEF); save(); apply(); sync(panel);
     };

@@ -8,6 +8,7 @@
  * 后端不在线时全部自动降级为原来的前端演示数据，页面永远不会白屏。
  * ===================================================================== */
 (function () {
+  function bT(s) { try { return (window.HPI18N && HPI18N.t) ? (HPI18N.t(s) || s) : s; } catch (e) { return s; } }
   'use strict';
 
   var API_BASE = (function () {
@@ -726,9 +727,17 @@
       if (greet) {
         var h = new Date().getHours();
         var g = h < 6 ? '凌晨好' : h < 12 ? '上午好' : h < 14 ? '中午好' : h < 18 ? '下午好' : '晚上好';
-        greet.textContent = g + '，' + (p.me && p.me.name ? p.me.name : '你') + '。' +
-          (a.withdrawn ? '当前申请已撤回，可重新投递。' : '你的「' + a.project + '」已进入【' + a.stage + '】环节，' +
-            (openTodos.length ? '还有 ' + openTodos.length + ' 项待办。' : '当前待办已全部完成。'));
+        var L = (window.HPI18N && HPI18N.lang && HPI18N.lang()) || 'zh';
+        var nm = (p.me && p.me.name ? p.me.name : bT('你'));
+        var tail = {
+          zh: '，' + nm + '。' + (a.withdrawn ? '当前申请已撤回，可重新投递。' : '你的「' + a.project + '」已进入【' + a.stage + '】环节，' + (openTodos.length ? '还有 ' + openTodos.length + ' 项待办。' : '当前待办已全部完成。')),
+          fr: ', ' + nm + '. ' + (a.withdrawn ? 'Votre candidature a été retirée ; vous pouvez postuler à nouveau.' : 'Votre projet « ' + a.project + ' » est à l’étape « ' + bT(a.stage) + ' », ' + (openTodos.length ? openTodos.length + ' tâche(s) à faire.' : 'toutes les tâches sont terminées.')),
+          en: ', ' + nm + '. ' + (a.withdrawn ? 'Your application was withdrawn; you can reapply.' : 'Your project “' + a.project + '” is at “' + bT(a.stage) + '”, ' + (openTodos.length ? openTodos.length + ' task(s) to do.' : 'all tasks are complete.')),
+          th: ', ' + nm + '. ' + (a.withdrawn ? 'ใบสมัครถูกถอนแล้ว สามารถสมัครใหม่ได้' : 'โครงการ « ' + a.project + ' » อยู่ในขั้น « ' + bT(a.stage) + ' » ' + (openTodos.length ? 'มี ' + openTodos.length + ' งานที่ต้องทำ' : 'งานทั้งหมดเสร็จแล้ว')),
+          ja: '、' + nm + '。' + (a.withdrawn ? '応募は取り下げられました。再応募できます。' : '「' + a.project + '」は「' + bT(a.stage) + '」段階です。' + (openTodos.length ? 'タスクが ' + openTodos.length + ' 件あります。' : 'タスクはすべて完了しています。')),
+          ar: '، ' + nm + '. ' + (a.withdrawn ? 'تم سحب الطلب ويمكنك التقديم مجدداً.' : 'مشروع « ' + a.project + ' » في مرحلة « ' + bT(a.stage) + ' »، ' + (openTodos.length ? 'لديك ' + openTodos.length + ' مهام.' : 'كل المهام مكتملة.'))
+        };
+        greet.textContent = bT(g) + (tail[L] || tail.zh);
       }
     }
 
@@ -738,33 +747,39 @@
       var pending = (c.bills || []).filter(function (b) { return b.status === '待确认'; });
       var amount = pending.reduce(function (s, b) { return s + (b.declaredAmount || 0); }, 0);
       if (kc) {
-        setNum(kc[0], num((c.projects || []).length, '个'));
+        setNum(kc[0], num((c.projects || []).length, bT('个')));
         var cn = 0, local = 0;
         (c.projects || []).forEach(function (proj) {
           cn += (proj.headcount && proj.headcount.cn) || 0;
           local += (proj.headcount && proj.headcount.local) || 0;
         });
-        setNum(kc[1], num(cn, '人'));
-        setNum(kc[2], num(local, '人'));
+        setNum(kc[1], num(cn, bT('人')));
+        setNum(kc[2], num(local, bT('人')));
         if (state.permissions.indexOf('bill.view') >= 0) {
-          setNum(kc[3], '¥' + (amount / 10000).toFixed(1) + ' <small>万</small>');
-          setFoot(kc[3], pending.length + ' 笔账单待确认');
+          setNum(kc[3], '¥' + (amount / 10000).toFixed(1) + ' <small>' + bT('万') + '</small>');
+          setFoot(kc[3], pending.length + ' ' + bT('笔账单待确认'));
         } else {
           setNum(kc[3], '—');
-          setFoot(kc[3], '当前账号无账单查看权限');
+          setFoot(kc[3], bT('当前账号无账单查看权限'));
         }
-        setFoot(kc[1], (c.projects || []).length + ' 个项目在册');
+        setFoot(kc[1], (c.projects || []).length + ' ' + bT('个项目在册'));
       }
       var greetC = host.querySelector('#greetLine') || document.getElementById('greetLine');
       if (greetC) {
         var h2 = new Date().getHours();
         var g2 = h2 < 6 ? '凌晨好' : h2 < 12 ? '上午好' : h2 < 14 ? '中午好' : h2 < 18 ? '下午好' : '晚上好';
-        var meName = (c.me && c.me.name) || '企业成员';
-        var meRole = (c.me && c.me.memberRole) ? '（' + c.me.memberRole + '）' : '';
-        var billLine = state.permissions.indexOf('bill.view') >= 0
-          ? ('今日有 ' + pending.length + ' 笔账单待确认，')
-          : '当前账号仅可查看项目与需求，';
-        greetC.textContent = g2 + '，' + meName + meRole + '。' + billLine + ((c.projects || []).length) + ' 个项目在办。';
+        var L = (window.HPI18N && HPI18N.lang && HPI18N.lang()) || 'zh';
+        var meName = (c.me && c.me.name) || bT('企业成员');
+        var meRole = (c.me && c.me.memberRole) ? '（' + bT(c.me.memberRole) + '）' : '';
+        var greetTail = {
+          zh: '，' + meName + meRole + '。' + (state.permissions.indexOf('bill.view') >= 0 ? ('今日有 ' + pending.length + ' 笔账单待确认，') : '当前账号仅可查看项目与需求，') + (c.projects || []).length + ' 个项目在办。',
+          fr: ', ' + meName + meRole + '. ' + (state.permissions.indexOf('bill.view') >= 0 ? ('Aujourd’hui ' + pending.length + ' facture(s) à confirmer, ') : 'Ce compte peut consulter les projets et les besoins. ') + (c.projects || []).length + ' projets en cours.',
+          en: ', ' + meName + meRole + '. ' + (state.permissions.indexOf('bill.view') >= 0 ? ('Today ' + pending.length + ' invoice(s) to confirm, ') : 'This account can view projects and needs. ') + (c.projects || []).length + ' projects in progress.',
+          th: ', ' + meName + meRole + ' ' + (state.permissions.indexOf('bill.view') >= 0 ? ('วันนี้มี ' + pending.length + ' ใบแจ้งหนี้ที่ต้องยืนยัน ') : 'บัญชีนี้ดูได้เฉพาะโครงการและความต้องการ ') + (c.projects || []).length + ' โครงการที่กำลังดำเนินการ',
+          ja: '、' + meName + meRole + '。' + (state.permissions.indexOf('bill.view') >= 0 ? ('本日 ' + pending.length + ' 件の請求書確認、') : 'このアカウントはプロジェクトと要件のみ閲覧できます。') + (c.projects || []).length + ' 件のプロジェクトが進行中です。',
+          ar: '، ' + meName + meRole + '. ' + (state.permissions.indexOf('bill.view') >= 0 ? ('لديك ' + pending.length + ' فاتورة للتأكيد، ') : 'هذا الحساب يمكنه عرض المشاريع والاحتياجات فقط. ') + (c.projects || []).length + ' مشاريع قيد التنفيذ.'
+        };
+        greetC.textContent = bT(g2) + (greetTail[L] || greetTail.zh);
       }
     }
 

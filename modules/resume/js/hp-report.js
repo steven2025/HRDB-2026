@@ -248,7 +248,7 @@
     var head = viewEl.querySelector('.page-head');
     var tabs = document.createElement('div');
     tabs.className = 'hpr-tabs';
-    tabs.innerHTML = '<button class="on" data-tab="base">经营概览</button><button data-tab="pool">候选池分析</button><button data-tab="job">单岗位分析</button>';
+    tabs.innerHTML = '<button class="on" data-tab="base">'+(window.HPI18N?HPI18N.t('经营概览'):'经营概览')+'</button><button data-tab="pool">'+(window.HPI18N?HPI18N.t('候选池分析'):'候选池分析')+'</button><button data-tab="job">'+(window.HPI18N?HPI18N.t('单岗位分析'):'单岗位分析')+'</button>';
     if (head && head.nextSibling) viewEl.insertBefore(tabs, head.nextSibling);
     else viewEl.insertBefore(tabs, consoleEl);
 

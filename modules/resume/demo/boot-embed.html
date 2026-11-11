@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<script src="../js/hp-config.js?v=20261110-cache1"></script>
-<script src="../js/hp-read-cache.js?v=20261110-cache1"></script>
+<script src="../js/hp-config.js?v=20261111-integrated1"></script>
+<script src="../js/hp-read-cache.js?v=20261111-integrated1"></script>
+
 <meta charset="UTF-8">
 <title>CORE ONLINE · 系统运转</title>
 <style>
@@ -191,7 +192,7 @@ svg.links path{fill:none;stroke:rgba(111,227,255,.7);stroke-width:2.8;filter:dro
 </div>
 
 <script src="assets/world-geo.js"></script>
-<!-- 源包未附播报文案.js，沿用页面内置 BOOT_LINES。 -->
+<!-- Boot narration uses the existing inline BOOT_LINES fallback. -->
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 /* ================= 可修改配置：改这里就行 ================= */
@@ -555,7 +556,7 @@ telemetry();
 addEventListener('resize',()=>{ initCV(); buildLinks(); });
 (function init(){ if(location.search.includes('auto')) run(); })();
 </script>
-<script src="iframe-i18n.js"></script>
+<script src="iframe-i18n.js?v=20261111-integrated1"></script>
 </body>
 </html>
 

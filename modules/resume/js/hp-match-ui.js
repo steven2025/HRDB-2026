@@ -15,7 +15,14 @@
   function T(k) { return I18.t(k); }
 
   /* 中英双语文案：非中文界面统一取英文（企业端匹配页只做中英，其余语言回退英文） */
-  function L(zh, en) { return I18.isEn() ? en : zh; }
+  function L(zh, en) {
+    if (!I18.isEn()) return zh;
+    var v = I18.t(zh);
+    if (v && v !== zh) return v;
+    var e = I18.t(en);
+    if (e && e !== en) return e;
+    return en;
+  }
 
   var API = (window.HP_API_BASE || '').replace(/\/+$/, '');
   var C = 2 * Math.PI * 62;
@@ -280,7 +287,7 @@
   }
   function mtViewLabel(k) {
     var x = MT_VIEWS.filter(function (v) { return v.k === k; })[0] || MT_VIEWS[1];
-    return x.ic + ' ' + (I18.isEn() ? x.en : x.zh) + ' ▾';
+    return x.ic + ' ' + L(x.zh, x.en) + ' ▾';
   }
   function mtViewSet(grid, k) {
     try { localStorage.setItem('hp.mt.view', k); } catch (e) {}
@@ -341,23 +348,23 @@
     opt = opt || {};
     if (!window.HP || !HP.modal) return;
     var body = '<div style="display:grid;gap:10px;font-size:12px">' +
-      '<div class="t-muted">候选人：<b style="color:var(--text)">' + esc(opt.candidateName || '') + '</b>' + (opt.jobTitle ? ' · ' + esc(opt.jobTitle) : '') + '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">面试时间</label><input id="ivAt" type="datetime-local" value="' + localInputValue(1, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">面试形式</label><select id="ivMode" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"><option>视频面试</option><option>现场面试</option><option>电话面试</option></select></div></div>' +
-      '<div><label class="t-muted">面试地点 / 会议链接</label><input id="ivLocation" placeholder="如：Zoom 链接 / 阿尔及尔项目现场" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">面试官</label><input id="ivInterviewer" value="海外项目 HR" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">时长（分钟）</label><input id="ivDuration" type="number" value="45" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
-      '<div><label class="t-muted">给候选人的备注</label><textarea id="ivNote" rows="2" placeholder="如：请提前 10 分钟上线，准备作品/证书" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>' +
-      '<div class="t-muted" style="font-size:11px;line-height:1.7">发出后候选人会收到通知，可以选择接受、申请改期或拒绝并填写理由。</div></div>';
-    HP.modal({ title: '邀面试', wide: true, body: body, actions: [
-      { text: '取消' },
-      { text: '发送邀约', primary: true, onClick: function (close) {
+      '<div class="t-muted">'+L("候选人：","Candidate:")+'<b style="color:var(--text)">' + esc(opt.candidateName || '') + '</b>' + (opt.jobTitle ? ' · ' + esc(opt.jobTitle) : '') + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">'+L("面试时间","Interview time")+'</label><input id="ivAt" type="datetime-local" value="' + localInputValue(1, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">'+L("面试形式","Format")+'</label><select id="ivMode" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"><option value="视频面试">'+L("视频面试","Video")+'</option><option value="现场面试">'+L("现场面试","On-site")+'</option><option value="电话面试">'+L("电话面试","Phone")+'</option></select></div></div>' +
+      '<div><label class="t-muted">'+L("面试地点 / 会议链接","Location / meeting link")+'</label><input id="ivLocation" placeholder="'+L("如：Zoom 链接 / 阿尔及尔项目现场","e.g. Zoom link / Algiers site")+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">'+L("面试官","Interviewer")+'</label><input id="ivInterviewer" value="海外项目 HR" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">'+L("时长（分钟）","Duration (min)")+'</label><input id="ivDuration" type="number" value="45" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div><label class="t-muted">'+L("给候选人的备注","Note to candidate")+'</label><textarea id="ivNote" rows="2" placeholder="'+L("如：请提前 10 分钟上线，准备作品/证书","e.g. Join 10 min early; prepare portfolio/certificates")+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>' +
+      '<div class="t-muted" style="font-size:11px;line-height:1.7">'+L("发出后候选人会收到通知，可以选择接受、申请改期或拒绝并填写理由。","The candidate will be notified and can accept, request a new time, or decline with a reason.")+'</div></div>';
+    HP.modal({ title: L('邀面试','Invite to interview'), wide: true, body: body, actions: [
+      { text: L('取消','Cancel') },
+      { text: L('发送邀约','Send invitation'), primary: true, onClick: function (close) {
         var at = (document.getElementById('ivAt') || {}).value || '';
         var location = (document.getElementById('ivLocation') || {}).value || '';
-        if (!at) { window.HP.toast('请选择时间', '面试时间不能为空'); return; }
-        if (!location.trim()) { window.HP.toast('请填写地点', '视频面试可填会议链接'); return; }
+        if (!at) { window.HP.toast(L('请选择时间','Select a time'), L('面试时间不能为空','Interview time is required')); return; }
+        if (!location.trim()) { window.HP.toast(L('请填写地点','Enter a location'), L('视频面试可填会议链接','Use a meeting link for video interviews')); return; }
         var payload = { jobId: opt.jobId, at: at.replace('T', ' '), mode: (document.getElementById('ivMode') || {}).value || '视频面试', location: location.trim(), interviewer: (document.getElementById('ivInterviewer') || {}).value || '', duration: Number((document.getElementById('ivDuration') || {}).value || 45), note: (document.getElementById('ivNote') || {}).value || '' };
         (call('company.invite', opt.candidateId, payload) || api('/api/company/candidates/' + encodeURIComponent(opt.candidateId) + '/interview', { method: 'POST', body: payload }))
-          .then(function () { close(); window.HP.toast('已发出面试邀约', '等待候选人确认 / 改期'); if (opt.onDone) opt.onDone(); })
-          .catch(function (e) { window.HP.toast('邀约失败', e.message); });
+          .then(function () { close(); window.HP.toast(L('已发出面试邀约','Interview invitation sent'), L('等待候选人确认 / 改期','Waiting for candidate confirmation / reschedule')); if (opt.onDone) opt.onDone(); })
+          .catch(function (e) { window.HP.toast(L('邀约失败','Invitation failed'), e.message); });
       }}
     ]});
   }
@@ -367,20 +374,20 @@
     var suggested = opt.salary || (opt.candidate && opt.candidate.salaryExpect ? Math.round(Number(opt.candidate.salaryExpect) / 100) / 10 + 'K' : '');
     var body = '<div style="display:grid;gap:10px;font-size:12px">' +
       '<div class="t-muted">候选人：<b style="color:var(--text)">' + esc(opt.candidateName || '') + '</b>' + (opt.jobTitle ? ' · ' + esc(opt.jobTitle) : '') + '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">offer 薪资</label><input id="ofSalary" value="' + esc(suggested) + '" placeholder="如：24,000 元/月" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">入职时间</label><input id="ofStart" type="date" value="' + localInputValue(30, 10).slice(0, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">合同周期（月）</label><input id="ofMonths" type="number" value="24" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">有效期至</label><input id="ofExpires" type="date" value="' + localInputValue(7, 10).slice(0, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
-      '<div><label class="t-muted">福利 / 说明</label><input id="ofBenefits" placeholder="如：包食宿、往返机票、商业保险" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
-      '<div><label class="t-muted">备注</label><textarea id="ofNote" rows="2" placeholder="给候选人的说明" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>' +
-      '<div class="t-muted" style="font-size:11px;line-height:1.7">发出后候选人可以接受、拒绝或提出薪资 / 入职时间协商。</div></div>';
-    HP.modal({ title: '发 offer', wide: true, body: body, actions: [
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">'+L('offer 薪资','Offer salary')+'</label><input id="ofSalary" value="' + esc(suggested) + '" placeholder="'+L("如：24,000 元/月","e.g. 24,000 / month")+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">'+L("入职时间","Start date")+'</label><input id="ofStart" type="date" value="' + localInputValue(30, 10).slice(0, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label class="t-muted">'+L("合同周期（月）","Contract (months)")+'</label><input id="ofMonths" type="number" value="24" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div><div><label class="t-muted">'+L("有效期至","Valid until")+'</label><input id="ofExpires" type="date" value="' + localInputValue(7, 10).slice(0, 10) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div></div>' +
+      '<div><label class="t-muted">'+L("福利 / 说明","Benefits / notes")+'</label><input id="ofBenefits" placeholder="'+L("如：包食宿、往返机票、商业保险","e.g. housing, meals, flights, insurance")+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px"></div>' +
+      '<div><label class="t-muted">'+L("备注","Note")+'</label><textarea id="ofNote" rows="2" placeholder="'+L("给候选人的说明","Note to candidate")+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-top:4px;font:inherit"></textarea></div>' +
+      '<div class="t-muted" style="font-size:11px;line-height:1.7">'+L("发出后候选人可以接受、拒绝或提出薪资 / 入职时间协商。","The candidate can accept, decline, or negotiate salary / start date.")+'</div></div>';
+    HP.modal({ title: L('发 offer','Send offer'), wide: true, body: body, actions: [
       { text: '取消' },
-      { text: '发送 offer', primary: true, onClick: function (close) {
+      { text: L('发送 offer','Send offer'), primary: true, onClick: function (close) {
         var salary = (document.getElementById('ofSalary') || {}).value || '';
-        if (!salary.trim()) { window.HP.toast('请填写薪资', 'offer 薪资不能为空'); return; }
+        if (!salary.trim()) { window.HP.toast(L('请填写薪资','Enter salary'), L('offer 薪资不能为空','Offer salary is required')); return; }
         var payload = { candidateId: opt.candidateId, salary: salary.trim(), startDate: (document.getElementById('ofStart') || {}).value || '', contractMonths: Number((document.getElementById('ofMonths') || {}).value || 24), benefits: (document.getElementById('ofBenefits') || {}).value || '', expiresAt: (document.getElementById('ofExpires') || {}).value || '', note: (document.getElementById('ofNote') || {}).value || '' };
         (call('company.createOffer', opt.jobId, payload) || api('/api/company/jobs/' + encodeURIComponent(opt.jobId) + '/offers', { method: 'POST', body: payload }))
-          .then(function () { close(); window.HP.toast('offer 已发出', '等待候选人接受 / 协商'); if (opt.onDone) opt.onDone(); })
-          .catch(function (e) { window.HP.toast('发送失败', e.message); });
+          .then(function () { close(); window.HP.toast(L('offer 已发出','Offer sent'), L('等待候选人接受 / 协商','Waiting for candidate acceptance / negotiation')); if (opt.onDone) opt.onDone(); })
+          .catch(function (e) { window.HP.toast(L('发送失败','Send failed'), e.message); });
       }}
     ]});
   }
@@ -543,7 +550,7 @@
           '</div>' +
           '<div class="mt-hero-main">' +
             '<div class="mt-hero-title">' + esc(data.job ? data.job.title : L('候选人','Candidates')) +
-              ' <span style="font-weight:400;font-size:12.5px;color:var(--text-2)">' + L('共 ', 'Total ') + lastList.length + L(' 位候选人', ' candidates') + '</span></div>' +
+              ' <span style="font-weight:400;font-size:12.5px;color:var(--text-2)">' + L('共', 'Total') + ' ' + lastList.length + ' ' + L('位候选人', 'candidates') + '</span></div>' +
             '<div class="mt-hero-sub">' + L('已投递 ', 'Applied ') + appliedCount + L(' 位 · 证件通过 ', ' · Docs passed ') + certOk + L(' 位 · 当前显示 ', ' · Showing ') + rows.length + L(' 位', '') + '</div>' +
             '<div class="mt-hero-sub" style="margin-top:4px;color:var(--text-2)">' + (scopeTip ? scopeTip + ' · ' : '') + L('勾选候选人后点「匹配分析」即可获得匹配分与排名', 'Select candidates and click Match analysis to get scores and ranking') + '</div>' +
           '</div>';
@@ -727,7 +734,7 @@
           .then(function (f) {
             box.innerHTML = '<span class="chip chip-g">' + L('投递', 'Applied') + ' ' + f.applied + '</span>' +
               '<span class="chip chip-i">' + L('面试', 'Interview') + ' ' + f.interview + '</span>' +
-              '<span class="chip chip-i">offer ' + f.offer + '</span>' +
+              '<span class="chip chip-i">' + L('offer', 'offer') + ' ' + f.offer + '</span>' +
               '<span class="chip chip-g">' + L('已录用', 'Hired') + ' ' + f.hired + ' / ' + L('需求', 'Need') + ' ' + f.headcount + '</span>';
           }).catch(function () {});
       }

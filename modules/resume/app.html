@@ -13,7 +13,7 @@
 })();
 </script>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="css/hp-mt.css">
+<link rel="stylesheet" href="css/hp-mt.css?v=20261111-integrated1">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>环球派遣 · 海外用工全周期平台</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2338bdf8'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M7 22V12l5 3.6L16 9l4 6.6L25 12v10z' fill='%23071020'/%3E%3C/svg%3E">
@@ -868,7 +868,7 @@ html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="
   .rz-intro{font-size:12.5px;line-height:1.85;color:var(--text)}
 
   /* ============ 简历打印：只打印简历区 ============ */
-  /* 由 #mtResPrint 在打印前给 body 加 .printing-resume（见 hp-match-ui.js） */
+  /* 由 #mtResPrint 在打印前给 body 加 .printing-resume（见 hp-match-ui.js?v=20261111-integrated1） */
   @media print{
     body.printing-resume{background:#fff !important;margin:10mm}
     body.printing-resume .sidebar,
@@ -7855,7 +7855,7 @@ window.SubApps.company = (function(){
     if(el1 && !charts.health){
       charts.health = echarts.init(el1);
       charts.health.setOption(Object.assign(baseOpt(), {
-        radar:{ indicator:[{name:'招募匹配',max:100},{name:'签约合规',max:100},{name:'证照手续',max:100},{name:'在岗履约',max:100},{name:'结算对账',max:100}], radius:'62%', splitArea:{areaStyle:{color:[c.surface2,'transparent']}}, axisName:{color:c.text2,fontSize:11.5}, splitLine:{lineStyle:{color:c.border}}, axisLine:{lineStyle:{color:c.border}} },
+        radar:{ indicator:[{name:tt('招募匹配'),max:100},{name:tt('签约合规'),max:100},{name:tt('证照手续'),max:100},{name:tt('在岗履约'),max:100},{name:tt('结算对账'),max:100}], radius:'62%', splitArea:{areaStyle:{color:[c.surface2,'transparent']}}, axisName:{color:c.text2,fontSize:11.5}, splitLine:{lineStyle:{color:c.border}}, axisLine:{lineStyle:{color:c.border}} },
         series:[{type:'radar',data:[{value:[88,76,70,82,64],name:'当前项目',areaStyle:{color:c.primary,opacity:.18},lineStyle:{color:c.primary,width:2},itemStyle:{color:c.primary}}]}]
       }), true);
     }
@@ -7871,12 +7871,12 @@ window.SubApps.company = (function(){
     if(el3 && !charts.bill){
       charts.bill = echarts.init(el3);
       charts.bill.setOption(Object.assign(baseOpt(), {
-        legend:{data:['派遣薪酬','当地薪酬','累计'],textStyle:{color:c.text2,fontSize:11.5},top:0,right:0},
+        legend:{data:[tt('派遣薪酬'),tt('当地薪酬'),tt('累计')],textStyle:{color:c.text2,fontSize:11.5},top:0,right:0},
         xAxis:{type:'category',data:['4月','5月','6月','7月','8月','9月'],axisLine:{lineStyle:{color:c.border}},axisLabel:{color:c.text3},axisTick:{show:false}},
         yAxis:{type:'value',name:'万元',nameTextStyle:{color:c.text3},splitLine:{lineStyle:{color:c.border}},axisLabel:{color:c.text3}},
         series:[
-          {name:'派遣薪酬',type:'bar',barWidth:12,data:[86,92,98,101,104,118],itemStyle:{color:c.primary,borderRadius:[4,4,0,0]}},
-          {name:'当地薪酬',type:'bar',barWidth:12,data:[38,44,52,55,60,68],itemStyle:{color:c.accent,borderRadius:[4,4,0,0]}},
+          {name:tt('派遣薪酬'),type:'bar',barWidth:12,data:[86,92,98,101,104,118],itemStyle:{color:c.primary,borderRadius:[4,4,0,0]}},
+          {name:tt('当地薪酬'),type:'bar',barWidth:12,data:[38,44,52,55,60,68],itemStyle:{color:c.accent,borderRadius:[4,4,0,0]}},
           {name:'累计',type:'line',smooth:true,data:[124,136,150,156,164,186],itemStyle:{color:c.gold},lineStyle:{width:2.5},symbol:'circle',symbolSize:6}
         ]
       }), true);
@@ -7908,11 +7908,11 @@ window.SubApps.company = (function(){
       var comp = p0.compliance || {};
       var pending = bills.filter(function(b){ return b.status === '待确认'; }).length;
       C.radar(el1, [
-        { name:'招募匹配', value: p0.health || 80 },
-        { name:'签约合规', value: comp.contractConsistency || 80 },
-        { name:'证照手续', value: comp.visaPass || 80 },
-        { name:'在岗履约', value: p0.progress || 80 },
-        { name:'结算对账', value: Math.max(40, 100 - pending * 12) }
+        { name:tt('招募匹配'), value: p0.health || 80 },
+        { name:tt('签约合规'), value: comp.contractConsistency || 80 },
+        { name:tt('证照手续'), value: comp.visaPass || 80 },
+        { name:tt('在岗履约'), value: p0.progress || 80 },
+        { name:tt('结算对账'), value: Math.max(40, 100 - pending * 12) }
       ]);
     }
 
@@ -7925,9 +7925,9 @@ window.SubApps.company = (function(){
         pipe += (p.headcount && p.headcount.pipeline) || 0;
       });
       C.donut(el2, [
-        { name:'中方派遣', value: cn, color: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() },
-        { name:'当地雇员', value: local, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() },
-        { name:'储备候选人', value: pipe, color: getComputedStyle(document.documentElement).getPropertyValue('--surface-3').trim() }
+        { name:tt('中方派遣'), value: cn, color: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() },
+        { name:tt('当地雇员'), value: local, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() },
+        { name:tt('储备候选人'), value: pipe, color: getComputedStyle(document.documentElement).getPropertyValue('--surface-3').trim() }
       ]);
     }
 
@@ -7979,8 +7979,11 @@ window.SubApps.company = (function(){
   function renderGreeting(){
     var h = new Date().getHours();
     var g = h<6?'凌晨好':h<12?'上午好':h<14?'中午好':h<18?'下午好':'晚上好';
+    var L = (window.HPI18N && HPI18N.lang && HPI18N.lang()) || 'zh';
+    var gT = L === 'zh' ? g : ((window.HPI18N && HPI18N.t(g)) || g);
+    var tails = { zh: '，海外项目 HR。今日有 3 项待办，1 笔账单待确认（演示数据）。', fr: ', HR projet international. Aujourd’hui 3 tâches à faire et 1 facture à confirmer (démo).', en: ', Overseas HR. 3 open tasks and 1 invoice to confirm today (demo).', th: ', HR โครงการต่างประเทศ วันนี้มี 3 งานที่ต้องดำเนินการ และ 1 ใบแจ้งหนี้ที่ต้องยืนยัน (ข้อมูลตัวอย่าง)', ja: '、海外プロジェクトHR。本日は3件のタスクと1件の請求書確認があります（デモ）。', ar: '، مدير الموارد البشرية للمشروع الدولي. لديك 3 مهام وفاتورة واحدة للتأكيد اليوم (عرض توضيحي).' };
     var el = $('#greetLine', host);
-    if(el) el.textContent = g+'，海外项目 HR。今日有 3 项待办，1 笔账单待确认（演示数据）。';
+    if(el) el.textContent = gT + (tails[L] || tails.zh);
     $$('.kpi', host).forEach(function(k, i){
       k.style.cursor = 'pointer';
       k.addEventListener('click', function(){
@@ -7993,7 +7996,7 @@ window.SubApps.company = (function(){
     var p = DEMO.projects[0];
     var el = $('#tlOverview', host);
     if(el) el.innerHTML = p.stages.map(function(s, i){
-      return '<div class="tl-item '+s.st+'" data-stage="'+i+'" style="cursor:pointer"><div class="tl-time">'+s.t+'</div><div class="tl-track"><span class="tl-dot"></span></div><div class="tl-body"><div class="tl-title">'+s.title+(s.st==='now'?' <span class="chip chip-w">进行中</span>':'')+'</div><div class="tl-desc">'+tt(s.desc)+'</div></div></div>';
+      return '<div class="tl-item '+s.st+'" data-stage="'+i+'" style="cursor:pointer"><div class="tl-time">'+s.t+'</div><div class="tl-track"><span class="tl-dot"></span></div><div class="tl-body"><div class="tl-title">'+tt(s.title)+(s.st==='now'?' <span class="chip chip-w">'+tt('进行中')+'</span>':'')+'</div><div class="tl-desc">'+tt(s.desc)+'</div></div></div>';
     }).join('');
     $$('[data-stage]', el).forEach(function(item){
       item.addEventListener('click', function(){
@@ -8011,7 +8014,7 @@ window.SubApps.company = (function(){
       {t:'当地雇员保险续保确认', d:'3 人保单将于 11 月到期', chip:'提醒', cls:'chip-i', target:'service'}
     ];
     el.innerHTML = todos.map(function(x){
-      return '<div class="row" style="cursor:pointer" data-todo="'+x.target+'"><div class="r-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div><div class="r-main"><div class="r-title">'+x.t+'</div><div class="r-sub">'+x.d+'</div></div><span class="chip '+x.cls+'">'+x.chip+'</span></div>';
+      return '<div class="row" style="cursor:pointer" data-todo="'+x.target+'"><div class="r-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div><div class="r-main"><div class="r-title">'+tt(x.t)+'</div><div class="r-sub">'+tt(x.d)+'</div></div><span class="chip '+x.cls+'">'+tt(x.chip)+'</span></div>';
     }).join('');
     $$('[data-todo]', el).forEach(function(r){
       r.addEventListener('click', function(){
@@ -8047,9 +8050,9 @@ window.SubApps.company = (function(){
     var projectOptions = (DEMO.projects || []).map(function(p){
       return '<option value="'+p.id+'">'+p.name+'</option>';
     }).join('') || '<option value="p1">阿尔及利亚玻璃制品工厂</option>';
-    grid.innerHTML = '<div class="card card-pad"><div class="card-title">发起岗位需求 <span class="sub">发布面向国内 / 目的国的招聘用工信息</span></div><div style="margin-top:14px;display:grid;gap:12px"><div><label class="t-muted" style="font-size:12px">项目</label><select id="reqProject" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px">'+projectOptions+'</select></div><div><label class="t-muted" style="font-size:12px">岗位名称与人数</label><input id="reqName" placeholder="如：玻璃压机操作工 × 6" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>'+
-      '<div style="border-top:1px dashed var(--border);padding-top:12px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:12.5px;font-weight:600">匹配评分规则</span><span class="t-muted" style="font-size:11.5px">发布时即设定，权重会归一化到 100</span><button class="btn btn-o btn-sm" id="reqWReset" type="button" style="margin-left:auto">恢复默认</button></div><div id="reqWeights" style="display:grid;gap:9px;margin-top:10px"></div><div class="t-muted" style="font-size:11.5px;margin-top:8px" id="reqWSum">合计 <b id="reqWSumVal">100</b> / 归一化 100</div></div>'+
-      '<button class="btn btn-p" id="btnSubmitReq"'+(can('job.create') ? '' : ' disabled title="当前账号没有「发布岗位」权限"')+'>发布岗位</button>'+(can('job.create') ? '' : '<div class="chip chip-g" style="justify-self:start">当前账号无「发布岗位」权限</div>')+'<div class="t-muted" style="font-size:11.5px">已发布岗位：<span id="reqCount">'+(DEMO.jobRequests||[]).length+'</span> 条</div></div></div><div class="card"><div class="card-title" style="padding:16px 18px 10px">增值服务 <span class="sub">AI 免费 · 合作交付</span></div><div id="svcList" style="padding:0 16px 16px"></div></div>';
+    grid.innerHTML = '<div class="card card-pad"><div class="card-title">'+ovT("发起岗位需求")+' <span class="sub">'+ovT("发布面向国内 / 目的国的招聘用工信息")+'</span></div><div style="margin-top:14px;display:grid;gap:12px"><div><label class="t-muted" style="font-size:12px">'+tr("项目")+'</label><select id="reqProject" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px">'+projectOptions+'</select></div><div><label class="t-muted" style="font-size:12px">'+tr("岗位名称与人数")+'</label><input id="reqName" placeholder="如：玻璃压机操作工 × 6" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-top:5px"></div>'+
+      '<div style="border-top:1px dashed var(--border);padding-top:12px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:12.5px;font-weight:600">'+tr("匹配评分规则")+'</span><span class="t-muted" style="font-size:11.5px">'+tr("发布时即设定，权重会归一化到 100")+'</span><button class="btn btn-o btn-sm" id="reqWReset" type="button" style="margin-left:auto">'+tr("恢复默认")+'</button></div><div id="reqWeights" style="display:grid;gap:9px;margin-top:10px"></div><div class="t-muted" style="font-size:11.5px;margin-top:8px" id="reqWSum">合计 <b id="reqWSumVal">100</b> / 归一化 100</div></div>'+
+      '<button class="btn btn-p" id="btnSubmitReq"'+(can('job.create') ? '' : ' disabled title="当前账号没有「发布岗位」权限"')+'>'+tr("发布岗位")+'</button>'+(can('job.create') ? '' : '<div class="chip chip-g" style="justify-self:start">当前账号无「发布岗位」权限</div>')+'<div class="t-muted" style="font-size:11.5px">已发布岗位：<span id="reqCount">'+(DEMO.jobRequests||[]).length+'</span> '+ovT('条')+'</div></div></div><div class="card"><div class="card-title" style="padding:16px 18px 10px">'+ovT("增值服务")+' <span class="sub">'+ovT("AI 免费 · 合作交付")+'</span></div><div id="svcList" style="padding:0 16px 16px"></div></div>';
 
     /* ---- 评分规则（发布岗位时调节）----
        复用 hp-match-ui 中同一套标签与默认值，保持一致。
@@ -8093,7 +8096,7 @@ window.SubApps.company = (function(){
     })();
     var svc = $('#svcList', host);
     svc.innerHTML = DEMO.services.map(function(s){
-      return '<div class="row" style="cursor:pointer" data-svc="'+s.name+'" data-svc-id="'+(s.id||'')+'" data-svc-agent="'+(s.agent||'')+'"><div class="r-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg></div><div class="r-main"><div class="r-title">'+s.name+'</div><div class="r-sub">'+s.desc+'</div></div><span class="chip '+s.cls+'">'+s.tag+'</span></div>';
+      return '<div class="row" style="cursor:pointer" data-svc="'+s.name+'" data-svc-id="'+(s.id||'')+'" data-svc-agent="'+(s.agent||'')+'"><div class="r-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg></div><div class="r-main"><div class="r-title">'+tt(s.name)+'</div><div class="r-sub">'+tt(s.desc)+'</div></div><span class="chip '+s.cls+'">'+tt(s.tag)+'</span></div>';
     }).join('');
     $$('[data-svc]', svc).forEach(function(r){
       r.addEventListener('click', function(){
@@ -8104,12 +8107,12 @@ window.SubApps.company = (function(){
           return;
         }
         if(r.dataset.svcId && !can('service.order')){ noPerm('下单增值服务'); return; }
-        window.HP.modal({title:r.dataset.svc, body:'<p>服务说明：</p><p class="t-muted" style="margin-top:8px">'+r.querySelector('.r-sub').textContent+'</p><p class="t-muted" style="margin-top:8px">交付周期：视具体服务而定</p><p class="t-muted" style="margin-top:8px">价格：AI 类免费；合作类按服务商报价</p>', actions:[{text:'立即下单', primary:true, onClick:function(c){
+        window.HP.modal({title:r.dataset.svc, body:'<p>'+ovT('服务说明：')+'</p><p class="t-muted" style="margin-top:8px">'+r.querySelector('.r-sub').textContent+'</p><p class="t-muted" style="margin-top:8px">'+ovT('交付周期：视具体服务而定')+'</p><p class="t-muted" style="margin-top:8px">'+ovT('价格：AI 类免费；合作类按服务商报价')+'</p>', actions:[{text:ovT('立即下单'), primary:true, onClick:function(c){
           if(window.HPBridge && window.HPBridge.isOnline() && r.dataset.svcId){
             window.HPBridge.api.company.serviceOrder(r.dataset.svcId).then(function(){
               c();
-              toast('已受理','服务单已创建，顾问会联系你');
-            }).catch(function(err){ toast('下单失败', err.message || '请稍后重试'); });
+              toast(ovT('已受理'),ovT('服务单已创建，顾问会联系你'));
+            }).catch(function(err){ toast(ovT('下单失败'), err.message || ovT('请稍后重试')); });
             return;
           }
           c(); toast('已提交','离线演示：服务需求已记录');
@@ -8160,6 +8163,21 @@ window.SubApps.company = (function(){
       toast('岗位已发布','离线演示：岗位与评分规则仅保存在本页');
     });
   }
+  function localizeServiceStatic(){
+    try{
+      if(!window.HPI18N || HPI18N.lang()==='zh' || !host) return;
+      var v=host.querySelector('.view[data-view="service"]'); if(!v) return;
+      v.querySelectorAll('.card-title,.t-muted,label,.btn,.chip,.r-title,.r-sub').forEach(function(el){
+        if(el.closest && el.closest('.brand-name,.mt-f-name,.u-name')) return;
+        for(var k=0;k<el.childNodes.length;k++){
+          var n=el.childNodes[k]; if(!n||n.nodeType!==3) continue;
+          var raw=n.nodeValue||'', key=raw.trim(); if(!key||key.length>160||!/[\u4e00-\u9fa5]/.test(key)) continue;
+          var t=HPI18N.t(key); if(t && t!==key) n.nodeValue=raw.replace(key,t);
+        }
+      });
+    }catch(e){}
+  }
+
   function renderBills(){
     var tb = $('#billRows', host);
     if(!tb) return;
@@ -8235,12 +8253,12 @@ window.SubApps.company = (function(){
     var grid = $('#kbGrid', host);
     if(!grid) return;
     grid.innerHTML = DEMO.kb.map(function(k){
-      return '<div class="card card-pad" style="cursor:pointer" data-kb="'+k.title+'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="chip '+k.cls+'">'+k.tag+'</span><span class="t-muted" style="font-size:11px">'+k.date+'</span></div><div style="font-size:14px;font-weight:700">'+k.title+'</div><div class="t-muted" style="font-size:12px;margin-top:5px">'+k.desc+'</div></div>';
+      return '<div class="card card-pad" style="cursor:pointer" data-kb="'+k.title+'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="chip '+k.cls+'">'+tt(k.tag)+'</span><span class="t-muted" style="font-size:11px">'+k.date+'</span></div><div style="font-size:14px;font-weight:700">'+tt(k.title)+'</div><div class="t-muted" style="font-size:12px;margin-top:5px">'+tt(k.desc)+'</div></div>';
     }).join('');
     $$('[data-kb]', grid).forEach(function(c){
       c.addEventListener('click', function(){
         var k = DEMO.kb.filter(function(x){ return x.title===c.dataset.kb; })[0];
-        window.HP.modal({title:k.title, body:'<div class="t-muted" style="margin-bottom:10px">'+k.cat+' · '+k.date+'</div><p>'+k.desc+'</p><p class="t-muted" style="margin-top:12px">条目为 AI 问答参考，非法律意见。</p>', actions:[{text:'关闭', primary:true}]});
+        window.HP.modal({title:tt(k.title), body:'<div class="t-muted" style="margin-bottom:10px">'+tt(k.cat)+' · '+k.date+'</div><p>'+tt(k.desc)+'</p><p class="t-muted" style="margin-top:12px">'+tt('条目为 AI 问答参考，非法律意见。')+'</p>', actions:[{text:tt('关闭'), primary:true}]});
       });
     });
   }
@@ -8326,12 +8344,12 @@ window.SubApps.company = (function(){
     var tb = $('#settleRows', host);
     if(!tb) return;
     tb.innerHTML = DEMO.settle.map(function(r, i){
-      return '<tr style="cursor:pointer" data-settle="'+i+'"><td class="t-strong">'+r.no+'</td><td>'+r.project+'</td><td>'+r.cat+'</td><td class="t-num">'+r.amount+'</td><td><span class="chip '+r.cls+'">'+r.status+'</span></td><td style="text-align:right"><span class="t-muted">'+r.inv+'</span></td></tr>';
+      return '<tr style="cursor:pointer" data-settle="'+i+'"><td class="t-strong">'+r.no+'</td><td>'+tt(r.project)+'</td><td>'+tt(r.cat)+'</td><td class="t-num">'+r.amount+'</td><td><span class="chip '+r.cls+'">'+tt(r.status)+'</span></td><td style="text-align:right"><span class="t-muted">'+tt(r.inv)+'</span></td></tr>';
     }).join('');
     $$('[data-settle]', tb).forEach(function(tr){
       tr.addEventListener('click', function(){
         var r = DEMO.settle[+tr.dataset.settle];
-        window.HP.modal({title:'结算明细 · '+r.no, body:'<p>项目：'+r.project+'</p><p>类别：'+r.cat+'</p><p>金额：'+r.amount+'</p><p>状态：'+r.status+'</p><p>发票：'+r.inv+'</p>', actions:[{text:'关闭', primary:true}]});
+        window.HP.modal({title:tt('结算明细')+' · '+r.no, body:'<p>'+tt('项目')+'：'+tt(r.project)+'</p><p>'+tt('类别')+'：'+tt(r.cat)+'</p><p>'+tt('金额')+'：'+r.amount+'</p><p>'+tt('状态')+'：'+tt(r.status)+'</p><p>'+tt('发票')+'：'+tt(r.inv)+'</p>', actions:[{text:tt('关闭'), primary:true}]});
       });
     });
     var expBtn = $('[data-demo="导出报告"]', host);
@@ -8355,13 +8373,13 @@ window.SubApps.company = (function(){
     var ml = $('#msgList', host);
     if(ml) ml.innerHTML = DEMO.msgs.map(function(m){
       var read = readSet[m.t] || m.read;
-      return '<div class="row" style="cursor:pointer;opacity:'+(read?'0.55':'1')+'" data-msg="'+m.t+'" data-msg-id="'+(m.id||'')+'"><div class="r-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></div><div class="r-main"><div class="r-title">'+m.t+' <span class="chip '+m.st+'" style="margin-left:6px">'+m.label+'</span>'+(read?' <span class="chip chip-g" style="margin-left:4px">已读</span>':'')+'</div><div class="r-sub">'+m.d+'</div></div><div class="t-muted" style="font-size:11px;flex:0 0 auto">'+m.time+'</div></div>';
+      return '<div class="row" style="cursor:pointer;opacity:'+(read?'0.55':'1')+'" data-msg="'+m.t+'" data-msg-id="'+(m.id||'')+'"><div class="r-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></div><div class="r-main"><div class="r-title">'+m.t+' <span class="chip '+m.st+'" style="margin-left:6px">'+m.label+'</span>'+(read?' <span class="chip chip-g" style="margin-left:4px">'+tt('已读')+'</span>':'')+'</div><div class="r-sub">'+tt(m.d)+'</div></div><div class="t-muted" style="font-size:11px;flex:0 0 auto">'+m.time+'</div></div>';
     }).join('');
     $$('[data-msg]', ml).forEach(function(r){
       r.addEventListener('click', function(){
         var m = DEMO.msgs.filter(function(x){ return x.t===r.dataset.msg; })[0];
         if(!m) return;
-        window.HP.modal({title:m.t, body:'<p>'+m.d+'</p><p class="t-muted" style="margin-top:8px">'+m.time+'</p>', actions:[{text:'知道了', primary:true}]});
+        window.HP.modal({title:tt(m.t), body:'<p>'+tt(m.d)+'</p><p class="t-muted" style="margin-top:8px">'+m.time+'</p>', actions:[{text:tt('知道了'), primary:true}]});
         readSet[m.t] = 1;
         try{ localStorage.setItem('hp-company-read', JSON.stringify(readSet)); }catch(e){}
         r.style.opacity = '0.55';
@@ -8525,19 +8543,19 @@ window.SubApps.company = (function(){
     var hint = $('#memberPermHint', host);
     if(hint){
       hint.innerHTML = '当前账号：<b>'+((DEMO.me && DEMO.me.name) || '企业成员')+'</b>'+
-        ' · '+(DEMO.me && DEMO.me.memberRole ? DEMO.me.memberRole : '—')+' · '+
+        ' · '+tt(DEMO.me && DEMO.me.memberRole ? DEMO.me.memberRole : '—')+' · '+
         ((DEMO.me && DEMO.me.perms) || []).map(function(k){
           return '<span class="chip chip-i" style="margin-right:4px">'+permLabel(k)+'</span>';
         }).join('');
     }
     tb.innerHTML = DEMO.members.map(function(m, i){
       var self = myMemberId && m.id === myMemberId;
-      return '<tr><td class="t-strong">'+m.name+(self?' <span class="chip chip-i" style="margin-left:4px">当前账号</span>':'')+'</td>'+
-        '<td class="t-muted">'+m.role+'<div style="margin-top:5px">'+permChips(m.perms)+'</div></td>'+
-        '<td><span class="chip '+m.cls+'">'+m.status+'</span></td>'+
+      return '<tr><td class="t-strong">'+m.name+(self?' <span class="chip chip-i" style="margin-left:4px">'+tt('当前账号')+'</span>':'')+'</td>'+
+        '<td class="t-muted">'+tt(m.role)+'<div style="margin-top:5px">'+permChips(m.perms)+'</div></td>'+
+        '<td><span class="chip '+m.cls+'">'+tt(m.status)+'</span></td>'+
         '<td style="text-align:right">'+(canManage
-          ? '<button class="btn btn-o btn-sm" data-mb="'+i+'" data-member-id="'+(m.id||'')+'">编辑权限</button>'
-          : '<span class="chip chip-g" title="需要「成员与权限」权限">无管理权限</span>')+'</td></tr>';
+          ? '<button class="btn btn-o btn-sm" data-mb="'+i+'" data-member-id="'+(m.id||'')+'">'+tt('编辑权限')+'</button>'
+          : '<span class="chip chip-g" title="'+tt('需要「成员与权限」权限')+'">'+tt('无管理权限')+'</span>')+'</td></tr>';
     }).join('');
 
     $$('[data-mb]', tb).forEach(function(b){
@@ -8546,7 +8564,7 @@ window.SubApps.company = (function(){
         if(!m) return;
         var self = myMemberId && m.id === myMemberId;
         var roleOptions = ['项目人力资源负责人','结算对账','项目管理'].map(function(r){
-          return '<option'+(r===m.role?' selected':'')+'>'+r+'</option>';
+          return '<option'+(r===m.role?' selected':'')+'>'+tt(r)+'</option>';
         }).join('');
         var boxes = PERM_CATALOG.map(function(p){
           var checked = (m.perms||[]).indexOf(p.key) >= 0;
@@ -8617,40 +8635,41 @@ window.SubApps.company = (function(){
     }
   }
 
+  function ovT(s){ try { return (window.hpT ? hpT(s) : (window.HPI18N && HPI18N.t ? HPI18N.t(s) : s)) || s; } catch (e) { return s; } }
   function buildViews(){
     host.innerHTML = `
       <section class="view" data-view="overview">
         <div class="page-head"><div><h1 data-i18n-raw="概览台">概览台</h1><div class="desc" id="greetLine"></div></div><div class="actions"><span class="demo-tag">前端原型 · 演示数据</span></div></div>
         <div class="grid kpis">
-          <div class="card kpi"><div class="k-label">在办项目</div><div class="k-num">3 <small>个</small></div><div class="k-foot">1 个新项目待立项</div></div>
-          <div class="card kpi"><div class="k-label">派遣中人员</div><div class="k-num">21 <small>人</small></div><div class="k-foot">其中 5 人手续办理中</div></div>
-          <div class="card kpi"><div class="k-label">当地雇员</div><div class="k-num">8 <small>人</small></div><div class="k-foot">覆盖 3 个项目岗位</div></div>
-          <div class="card kpi"><div class="k-label">本月应结算</div><div class="k-num">¥186.4 <small>万</small></div><div class="k-foot">1 笔账单待确认</div></div>
+          <div class="card kpi"><div class="k-label">${ovT('在办项目')}</div><div class="k-num">3 <small>${ovT('个')}</small></div><div class="k-foot">${ovT('1 个新项目待立项')}</div></div>
+          <div class="card kpi"><div class="k-label">${ovT('派遣中人员')}</div><div class="k-num">21 <small>${ovT('人')}</small></div><div class="k-foot">${ovT('其中 5 人手续办理中')}</div></div>
+          <div class="card kpi"><div class="k-label">${ovT('当地雇员')}</div><div class="k-num">8 <small>${ovT('人')}</small></div><div class="k-foot">${ovT('覆盖 3 个项目岗位')}</div></div>
+          <div class="card kpi"><div class="k-label">${ovT('本月应结算')}</div><div class="k-num">¥186.4 <small>${ovT('万')}</small></div><div class="k-foot">${ovT('1 笔账单待确认')}</div></div>
         </div>
         <div class="grid" style="grid-template-columns:1.6fr 1fr;align-items:start">
-          <div class="card card-pad"><div class="card-title">项目健康度 <span class="sub">各环节合规与进度综合评估</span></div><div id="chartHealth" style="height:250px;margin-top:6px"></div></div>
-          <div class="card card-pad"><div class="card-title">人员结构 <span class="sub">当前在册</span></div><div id="chartPeople" style="height:250px;margin-top:6px"></div></div>
+          <div class="card card-pad"><div class="card-title">${ovT('项目健康度')} <span class="sub">${ovT('各环节合规与进度综合评估')}</span></div><div id="chartHealth" style="height:250px;margin-top:6px"></div></div>
+          <div class="card card-pad"><div class="card-title">${ovT('人员结构')} <span class="sub">${ovT('当前在册')}</span></div><div id="chartPeople" style="height:250px;margin-top:6px"></div></div>
         </div>
         <div class="grid" style="grid-template-columns:1.3fr 1fr;margin-top:16px;align-items:start">
-          <div class="card card-pad"><div class="card-title">结算趋势 <span class="sub">近 6 个月（万元）</span></div><div id="chartBill" style="height:248px;margin-top:6px"></div></div>
-          <div class="card"><div class="card-title" style="padding:16px 18px 10px">待办事项 <span class="sub">3 项</span></div><div id="todoList" style="padding:0 16px 16px"></div></div>
+          <div class="card card-pad"><div class="card-title">${ovT('结算趋势')} <span class="sub">${ovT('近 6 个月（万元）')}</span></div><div id="chartBill" style="height:248px;margin-top:6px"></div></div>
+          <div class="card"><div class="card-title" style="padding:16px 18px 10px">${ovT('待办事项')} <span class="sub">${ovT('3 项')}</span></div><div id="todoList" style="padding:0 16px 16px"></div></div>
         </div>
-        <div class="card card-pad" style="margin-top:16px"><div class="card-title">重点项目进度 <span class="sub">阿尔及利亚玻璃制品工厂 · 中方派遣链</span></div><div class="tl" id="tlOverview" style="margin-top:10px"></div></div>
+        <div class="card card-pad" style="margin-top:16px"><div class="card-title">${ovT('重点项目进度')} <span class="sub">${ovT('阿尔及利亚玻璃制品工厂 · 中方派遣链')}</span></div><div class="tl" id="tlOverview" style="margin-top:10px"></div></div>
       </section>
 
       <section class="view" data-view="projects">
-        <div class="page-head"><div><h1 data-i18n-raw="项目管理">项目管理</h1><div class="desc" data-i18n-raw="一个项目下可以有多个岗位：先建项目，再在项目卡片上添加岗位">一个项目下可以有多个岗位：先建项目，再在项目卡片上添加岗位</div></div><div class="actions"><span class="demo-tag">演示数据</span><button class="btn btn-p btn-sm" id="btnNewJobTop">新建岗位</button><button class="btn btn-o btn-sm" id="btnNewProject">新建项目</button></div></div>
+        <div class="page-head"><div><h1 data-i18n-raw="项目管理">项目管理</h1><div class="desc" data-i18n-raw="一个项目下可以有多个岗位：先建项目，再在项目卡片上添加岗位">一个项目下可以有多个岗位：先建项目，再在项目卡片上添加岗位</div></div><div class="actions"><span class="demo-tag">${ovT('演示数据')}</span><button class="btn btn-p btn-sm" id="btnNewJobTop">${ovT('新建岗位')}</button><button class="btn btn-o btn-sm" id="btnNewProject">${ovT('新建项目')}</button></div></div>
 
         <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))" id="projectCards"></div>
         <div class="card card-pad" style="margin-top:16px" id="projectDetail"></div>
 
         <!-- 岗位管理（按项目分组显示） -->
         <div class="card card-pad" style="margin-top:16px">
-          <div class="card-title">岗位管理 <span class="sub">保存但未发布的岗位可在这里编辑、发布或删除</span></div>
+          <div class="card-title">${ovT('岗位管理')} <span class="sub">${ovT('保存但未发布的岗位可在这里编辑、发布或删除')}</span></div>
           <div style="display:flex;gap:6px;margin:12px 0;flex-wrap:wrap" id="jobStatusTabs">
-            <button class="btn btn-p btn-sm" data-st="all">全部</button>
-            <button class="btn btn-o btn-sm" data-st="draft">草稿（未发布）</button>
-            <button class="btn btn-o btn-sm" data-st="published">已发布</button>
+            <button class="btn btn-p btn-sm" data-st="all">${ovT('全部')}</button>
+            <button class="btn btn-o btn-sm" data-st="draft">${ovT('草稿（未发布）')}</button>
+            <button class="btn btn-o btn-sm" data-st="published">${ovT('已发布')}</button>
           </div>
           <div id="jobManageList"></div>
         </div>
@@ -8690,23 +8709,23 @@ window.SubApps.company = (function(){
       </section>
 
       <section class="view" data-view="report">
-        <div class="page-head"><div><h1 data-i18n-raw="报告与对账">报告与对账</h1><div class="desc" data-i18n-raw="月度用工报告、合规健康度、结算明细与发票">月度用工报告、合规健康度、结算明细与发票</div></div><div class="actions"><span class="demo-tag">演示数据</span><button class="btn btn-o btn-sm" data-demo="导出报告">导出报告</button></div></div>
+        <div class="page-head"><div><h1 data-i18n-raw="报告与对账">报告与对账</h1><div class="desc" data-i18n-raw="月度用工报告、合规健康度、结算明细与发票">月度用工报告、合规健康度、结算明细与发票</div></div><div class="actions"><span class="demo-tag">演示数据</span><button class="btn btn-o btn-sm" data-demo="导出报告">${ovT('导出报告')}</button></div></div>
         <div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
-          <div class="card card-pad"><div class="card-title">在岗人员趋势 <span class="sub">中方派遣 + 当地用工 · 近 6 个月</span></div><div id="chartTrend" style="height:270px;margin-top:6px"></div></div>
-          <div class="card card-pad"><div class="card-title">本月用工报告</div><div class="t-muted" style="margin-top:12px">在岗 29 人（派遣 21 / 当地 8），出勤率 97.2%，无合规预警项；本月派遣薪酬结算 ¥118.6 万，当地雇员薪酬结算 ¥67.8 万（示例数据）。</div></div>
+          <div class="card card-pad"><div class="card-title">${ovT('在岗人员趋势')} <span class="sub">${ovT('中方派遣 + 当地用工 · 近 6 个月')}</span></div><div id="chartTrend" style="height:270px;margin-top:6px"></div></div>
+          <div class="card card-pad"><div class="card-title">${ovT('本月用工报告')}</div><div class="t-muted" style="margin-top:12px">${ovT('在岗 29 人（派遣 21 / 当地 8），出勤率 97.2%，无合规预警项；本月派遣薪酬结算 ¥118.6 万，当地雇员薪酬结算 ¥67.8 万（示例数据）。')}</div></div>
         </div>
-        <div class="card card-pad" style="margin-top:16px"><div class="card-title">结算明细 <span class="sub">2026 年 9 月 · 口径：结算单</span></div><table class="table" style="margin-top:8px"><thead><tr><th>结算单号</th><th>项目</th><th>类别</th><th>金额</th><th>状态</th><th style="text-align:right">发票</th></tr></thead><tbody id="settleRows"></tbody></table></div>
+        <div class="card card-pad" style="margin-top:16px"><div class="card-title">${ovT('结算明细')} <span class="sub">${ovT('2026 年 9 月 · 口径：结算单')}</span></div><table class="table" style="margin-top:8px"><thead><tr><th>${ovT('结算单号')}</th><th>${ovT('项目')}</th><th>${ovT('类别')}</th><th>${ovT('金额')}</th><th>${ovT('状态')}</th><th style="text-align:right">发票</th></tr></thead><tbody id="settleRows"></tbody></table></div>
       </section>
 
       <section class="view" data-view="members">
-        <div class="page-head"><div><h1 data-i18n-raw="消息与成员">消息与成员</h1><div class="desc" data-i18n-raw="业务节点消息推送与企业成员权限管理">业务节点消息推送与企业成员权限管理</div></div><div class="actions"><span class="demo-tag">演示数据</span><button class="btn btn-p btn-sm" data-demo="添加成员">添加成员</button></div></div>
+        <div class="page-head"><div><h1 data-i18n-raw="消息与成员">消息与成员</h1><div class="desc" data-i18n-raw="业务节点消息推送与企业成员权限管理">业务节点消息推送与企业成员权限管理</div></div><div class="actions"><span class="demo-tag">演示数据</span><button class="btn btn-p btn-sm" data-demo="添加成员">${ovT('添加成员')}</button></div></div>
         <div class="grid" style="grid-template-columns:1.1fr 1fr;align-items:start">
-          <div class="card"><div class="card-title" style="padding:16px 18px 10px">消息中心 <span class="sub">节点自动推送</span></div><div id="msgList" style="padding:0 16px 16px"></div></div>
+          <div class="card"><div class="card-title" style="padding:16px 18px 10px">${ovT('消息中心')} <span class="sub">${ovT('节点自动推送')}</span></div><div id="msgList" style="padding:0 16px 16px"></div></div>
           <div class="card card-pad" style="margin-bottom:16px">
-            <div class="card-title">审批中心 <span class="sub" id="approvalSub">—</span></div>
+            <div class="card-title">${ovT('审批中心')} <span class="sub" id="approvalSub">—</span></div>
             <div style="display:flex;gap:8px;margin-top:10px">
-              <button class="btn btn-o btn-sm" id="btnApprovalRefresh">刷新</button>
-              <button class="btn btn-o btn-sm" id="btnApplyPerm">申请调整成员权限</button>
+              <button class="btn btn-o btn-sm" id="btnApprovalRefresh">${ovT('刷新')}</button>
+              <button class="btn btn-o btn-sm" id="btnApplyPerm">${ovT('申请调整成员权限')}</button>
             </div>
             <div id="approvalList" style="margin-top:12px"></div>
           </div>
@@ -8722,8 +8741,8 @@ window.SubApps.company = (function(){
       </section>
 
       <section class="view" data-view="pool">
-        <div class="page-head"><div><h1 data-i18n-raw="简历库">简历库</h1>
-          <div class="desc" data-i18n-raw="分析后自动入库，低分进待清理，删除进回收站">分析后自动入库，低分进待清理，删除进回收站</div></div>
+        <div class="page-head"><div><h1>${ovT('简历库')}</h1>
+          <div class="desc">${ovT('分析后自动入库，低分进待清理，删除进回收站')}</div></div>
           <div class="actions"><span class="demo-tag">演示数据</span></div></div>
         <div id="hpPool"></div>
       </section>
@@ -8792,6 +8811,12 @@ window.SubApps.company = (function(){
     bindApprovalActions();
     refreshApprovals();
     mounted = true;
+    document.addEventListener('hp:lang', function () {
+      try {
+        renderGreeting(); renderTimeline(); renderTodos(); localizeOverviewStatic();
+        if ((window.HP.getView && HP.getView()) === 'overview') setTimeout(initCharts, 80);
+      } catch (e) {}
+    });
   }
 
   function showView(view){
@@ -8802,7 +8827,9 @@ window.SubApps.company = (function(){
     if(view === 'rank' && window.HPMatch){ window.HPMatch.rank($('#companyRankRoot', host), {}); }
     if(view === 'stage' && window.HPStage){ window.HPStage.mount($('#companyStageRoot', host), window.HPS_CFG || {}); }
     if(view === 'overview' || view === 'report'){
+      if(view === 'overview'){ renderGreeting(); renderTodos(); renderTimeline(); localizeOverviewStatic(); }
       setTimeout(initCharts, 60);
+      if(view === 'overview'){ setTimeout(localizeOverviewStatic, 100); setTimeout(localizeOverviewStatic, 700); }
     }
     if(view === 'console' && window.HPCONSOLE){
       window.HPCONSOLE.mount(document.getElementById('hpConsole'));
@@ -8813,6 +8840,7 @@ window.SubApps.company = (function(){
     if(view === 'console' && window.HPREPORT){
       window.HPREPORT.initConsole(host.querySelector('.view[data-view="console"]'));
     }
+    if(view === 'service'){ setTimeout(localizeServiceStatic, 80); setTimeout(localizeServiceStatic, 700); }
     if(view === 'knowledge' && window.HPCOUNTRY){
       window.HPCOUNTRY.init(host.querySelector('.view[data-view="knowledge"]'));
     }
@@ -9931,36 +9959,78 @@ window.SubApps.assurance = (function(){
   };
 })();
 </script>
-<script src="js/hp-charts.js?v=20261110-integration1"></script>
-<link rel="stylesheet" href="css/hp-stage.css">
-<link rel="stylesheet" href="css/hp-stage-light.css">
-<link rel="stylesheet" href="css/hp-doc.css">
-<link rel="stylesheet" href="css/hp-profile-flow.css">
-<link rel="stylesheet" href="css/hp-demo.css">
-<script src="js/hp-stage-markup.js?v=20261110-integration1"></script>
-<script src="js/hp-boot.js?v=20261110-integration1"></script>
-<script src="js/hp-stage.js?v=20261110-integration1"></script>
-<script src="js/hp-i18n.js?v=20261110-integration1"></script>
-<script src="js/hp-lang-fetch.js?v=20261110-integration1"></script>
-<script src="js/hp-sound.js?v=20261110-integration1"></script>
-<script src="js/hp-demo-modal.js?v=20261110-integration1"></script>
-<script src="js/hp-profile-flow.js?v=20261110-integration1"></script>
-<script src="js/hp-resume-analysis.js?v=20261110-integration1"></script>
-<script src="js/hp-company-job.js?v=20261110-integration1"></script>
-<script src="js/hp-match-ui.js?v=20261110-integration1"></script>
-<script src="js/hp-config.js?v=20261110-cache1"></script>
-<script src="js/hp-read-cache.js?v=20261110-cache1"></script>
-<script src="js/hp-bridge.js?v=20261110-cache1"></script>
-<script src="js/hp-console.js?v=20261110-integration1"></script>
-<script src="js/hp-job-analysis.js?v=20261110-integration1"></script>
-<script src="js/hp-ai-panel.js?v=20261110-integration1"></script>
-  <script src="js/hp-pool.js?v=20261110-cache1"></script>
-<script src="js/hp-report.js?v=20261110-integration1"></script>
-<script src="js/hp-country.js?v=20261110-integration1"></script>
-<script src="js/hp-jobs.js?v=20261110-integration1"></script>
-<script src="js/hp-settings-panel.js?v=20261110-integration1"></script>
-<script src="js/hp-resume.js?v=20261110-integration1"></script>
-<script src="js/hp-i18n-extra.js?v=20261110-integration1"></script>
+<script src="js/hp-charts.js?v=20261111-integrated1"></script>
+<link rel="stylesheet" href="css/hp-stage.css?v=20261111-integrated1">
+<link rel="stylesheet" href="css/hp-stage-light.css?v=20261111-integrated1">
+<link rel="stylesheet" href="css/hp-doc.css?v=20261111-integrated1">
+<link rel="stylesheet" href="css/hp-profile-flow.css?v=20261111-integrated1">
+<link rel="stylesheet" href="css/hp-demo.css?v=20261111-integrated1">
+<script src="js/hp-stage-markup.js?v=20261111-integrated1"></script>
+<script src="js/hp-boot.js?v=20261111-integrated1"></script>
+<script src="js/hp-stage.js?v=20261111-integrated1"></script>
+<script src="js/hp-i18n.js?v=20261111-integrated1"></script>
+<script src="js/hp-lang-fetch.js?v=20261111-integrated1"></script>
+<script src="js/hp-sound.js?v=20261111-integrated1"></script>
+<script src="js/hp-demo-modal.js?v=20261111-integrated1"></script>
+<script src="js/hp-profile-flow.js?v=20261111-integrated1"></script>
+<script src="js/hp-resume-analysis.js?v=20261111-integrated1"></script>
+<script src="js/hp-company-job.js?v=20261111-integrated1"></script>
+<script src="js/hp-match-ui.js?v=20261111-integrated1"></script>
+<script src="js/hp-config.js?v=20261111-integrated1"></script>
+<script src="js/hp-read-cache.js?v=20261111-integrated1"></script>
+<script src="js/hp-bridge.js?v=20261111-integrated1"></script>
+<script src="js/hp-console.js?v=20261111-integrated1"></script>
+<script src="js/hp-job-analysis.js?v=20261111-integrated1"></script>
+<script src="js/hp-ai-panel.js?v=20261111-integrated1"></script>
+  <script src="js/hp-pool.js?v=20261111-integrated1"></script>
+<script src="js/hp-report.js?v=20261111-integrated1"></script>
+<script src="js/hp-country.js?v=20261111-integrated1"></script>
+<script src="js/hp-jobs.js?v=20261111-integrated1"></script>
+<script src="js/hp-settings-panel.js?v=20261111-integrated1"></script>
+<script src="js/hp-resume.js?v=20261111-integrated1"></script>
+<script src="js/hp-i18n-extra.js?v=20261111-integrated1"></script>
+<script src="js/hp-canvas-i18n.js?v=20261111-integrated1"></script>
+<script src="js/hp-fill-i18n.js?v=20261111-integrated1"></script>
+<script src="js/hp-dict-sweep.js?v=20261111-integrated1"></script>
+<script src="js/hp-overview-i18n.js?v=20261111-integrated1"></script>
+<script>
+(function(){
+  function fix(){
+    try{
+      if(!window.HPI18N || HPI18N.lang()==='zh') return;
+      var sels='.k-label,.k-foot,.card-title,.page-head h1,.page-head .desc,.mt-hero-title,.mt-hero-sub,.cj-title,.cj-sub,.chip,.demo-tag,.hpp-title,.hpr-title';
+      var els=document.querySelectorAll(sels);
+      for(var i=0;i<els.length;i++){
+        var el=els[i];
+        if(el.closest&&el.closest('[data-i18n-skip],.brand-name,.mt-f-name,.u-name')) continue;
+        for(var k=0;k<el.childNodes.length;k++){
+          var n=el.childNodes[k];
+          if(!n||n.nodeType!==3) continue;
+          var raw=n.nodeValue||'', key=raw.trim();
+          if(!key||key.length>120||!/[\u4e00-\u9fa5]/.test(key)) continue;
+          var v=HPI18N.t(key);
+          if(v&&v!==key) n.nodeValue=raw.replace(key,v);
+        }
+      }
+    }catch(e){}
+  }
+  document.addEventListener('hp:lang',function(){setTimeout(fix,100)});
+  setInterval(fix,700); setTimeout(fix,800);
+})();
+</script>
+<script>
+(function(){
+  function t(x){try{var v=HPI18N.t(x);return v&&v!==x?v:x}catch(e){return x}}
+  function f(){
+    try{
+      if(!window.HPI18N||HPI18N.lang()==='zh')return;
+      var es=document.querySelectorAll('.view[data-view="overview"] .k-label,.view[data-view="overview"] .k-foot,.view[data-view="overview"] .card-title,.view[data-view="overview"] .page-head h1,.view[data-view="overview"] .page-head .desc');
+      for(var i=0;i<es.length;i++){for(var k=0;k<es[i].childNodes.length;k++){var n=es[i].childNodes[k];if(n.nodeType!==3)continue;var a=n.nodeValue,b=a.trim();if(!b||!/[\u4e00-\u9fa5]/.test(b))continue;var v=t(b);if(v!==b)n.nodeValue=a.replace(b,v)}}
+    }catch(e){}
+  }
+  setInterval(f,500);document.addEventListener('hp:lang',function(){setTimeout(f,100)});
+})();
+</script><script src="js/hp-api-sweep.js?v=20261111-integrated1"></script>
 <a id="platform-home-return" href="../../platform.html" target="_top" style="position:fixed;right:18px;bottom:18px;z-index:2147483647;padding:11px 17px;border:1px solid #d6a956;border-radius:10px;background:#0a2634;color:#f0d59c;font:600 14px/1.5 system-ui;text-decoration:none">← 返回主页</a><script>if(window.self!==window.top)document.getElementById('platform-home-return').hidden=true;</script>
 </body>
 </html>
